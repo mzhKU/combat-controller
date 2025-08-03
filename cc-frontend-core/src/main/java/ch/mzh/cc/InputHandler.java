@@ -6,7 +6,6 @@ import ch.mzh.cc.model.Entity;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 
 import java.util.ArrayList;
@@ -17,14 +16,18 @@ public class InputHandler extends InputAdapter implements Observable {
   private final OrthographicCamera camera;
   private final Grid grid;
   private final EntityManager entityManager;
-  private Entity selectedEntity;
   private final Vector3 mouseWorldPos;
-  private final List<Observer> observers = new ArrayList<>();
+  private final CoordinateConverter coordinateConverter;
+  private final List<Observer> observers = new ArrayList<>(); // TODO: Initialize consistently
 
-  public InputHandler(OrthographicCamera camera, Grid grid, EntityManager entityManager) {
+  private Entity selectedEntity;
+
+
+  public InputHandler(OrthographicCamera camera, Grid grid, EntityManager entityManager, CoordinateConverter coordinateConverter) {
     this.camera = camera;
     this.grid = grid;
     this.entityManager = entityManager;
+    this.coordinateConverter = coordinateConverter;
     this.mouseWorldPos = new Vector3();
   }
 
@@ -56,26 +59,26 @@ public class InputHandler extends InputAdapter implements Observable {
   }
 
   private void handleEntitySelection(int screenX, int screenY) {
-    convertScreenToWorldCoordinates(screenX, screenY);
-    Position2D gridPos = grid.worldToGrid(mouseWorldPos.x, mouseWorldPos.y);
-    Position2D mousePositionGrid = new Position2D(gridPos.getX(), gridPos.getY());
+    convertScreenToWorldCoordinates(screenX, screenY); // TODO: Why this?
 
-    if (grid.isInvalidPosition(mousePositionGrid)) {
+    Position2D selectedGridPosition = coordinateConverter.worldToGrid(mouseWorldPos.x, mouseWorldPos.y);
+
+    if (grid.isInvalidPosition(selectedGridPosition)) {
       selectedEntity = null;
       return;
     }
 
-    Entity clickedEntity = entityManager.getEntityAt(mousePositionGrid);
+    Entity clickedEntity = entityManager.getEntityAt(selectedGridPosition);
     updateEntityChangeListeners(clickedEntity);
   }
 
   private void handleMovementCommandOfSelectedEntity(int screenX, int screenY) {
     if (isImmobile(selectedEntity)) return;
 
-    convertScreenToWorldCoordinates(screenX, screenY);
+    convertScreenToWorldCoordinates(screenX, screenY); // TODO: why this?
 
-    // TODO: Move to backend
-    Position2D targetPosition = grid.worldToGrid(mouseWorldPos.x, mouseWorldPos.y);
+    Position2D targetPosition = coordinateConverter.worldToGrid(mouseWorldPos.x, mouseWorldPos.y);
+
     if (grid.isInvalidPosition(targetPosition)) {
       System.out.println("Invalid target position: (" + targetPosition.getX() + ", " + targetPosition.getY() + ")");
       return;
@@ -117,6 +120,7 @@ public class InputHandler extends InputAdapter implements Observable {
   }
 
   // TODO: Move to entity.
+  // TODO: Prevent NPE when right-click on empty grid with no entity selected
   private boolean isImmobile(Entity selectedEntity) {
     if (!selectedEntity.hasComponent(VehicleMovementComponent.class))      {
       System.out.println("This entity cannot move: " + selectedEntity.getName());

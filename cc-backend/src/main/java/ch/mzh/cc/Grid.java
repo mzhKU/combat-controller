@@ -22,14 +22,6 @@ public class Grid {
     initializeGridPositions();
   }
 
-  public Position2D gridToWorld(int gridX, int gridY) {
-    return new Position2D(gridX * tileSize, gridY * tileSize);
-  }
-
-  public Position2D worldToGrid(float worldX, float worldY) {
-    return new Position2D((int)(worldX / tileSize), (int)(worldY / tileSize));
-  }
-
   public boolean isInvalidPosition(Position2D position) {
     return position.getX() < 0 || position.getX() >= width || position.getY() < 0 || position.getY() >= height;
   }

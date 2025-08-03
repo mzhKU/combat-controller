@@ -1,15 +1,22 @@
 package ch.mzh.cc;
 
-import ch.mzh.cc.components.*;
-import ch.mzh.cc.model.*;
+import ch.mzh.cc.components.BaseSupplyComponent;
+import ch.mzh.cc.components.Component;
+import ch.mzh.cc.components.FuelComponent;
+import ch.mzh.cc.components.FuelSystem;
+import ch.mzh.cc.components.VehicleMovementComponent;
+import ch.mzh.cc.components.VehicleSupplyComponent;
+import ch.mzh.cc.model.Base;
+import ch.mzh.cc.model.Cannon;
+import ch.mzh.cc.model.Entity;
+import ch.mzh.cc.model.EntityType;
+import ch.mzh.cc.model.SupplyTruck;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.math.Vector3;
-
-import java.util.List;
 
 import static ch.mzh.cc.model.EntityType.SUPPLY_TRUCK;
 
@@ -22,6 +29,7 @@ public class Game extends ApplicationAdapter implements Observer {
   private EntityManager entityManager;
   private FuelSystem fuelSystem;
   private SupplyRuleEngine supplyRuleEngine;
+  private CoordinateConverter coordinateConverter;
 
   // Camera movement
   private static final float CAMERA_SPEED = 600f;
@@ -29,11 +37,20 @@ public class Game extends ApplicationAdapter implements Observer {
   private static final float MIN_ZOOM = 0.1f;
   private static final float MAX_ZOOM = 2.0f;
 
+  private static final int GRID_WIDTH = 40;
+  private static final int GRID_HEIGHT = 40;
+  private static final int TILE_SIZE = 32; // 32px tiles
+
+  private static final int BASE_INIT_X = 10;
+  private static final int BASE_INIT_Y = 10;
+
   @Override
   public void create() {
     initializeCamera();
     initializeGrid();
     initializeEntityManager();
+
+    initializeCoordinateConverter();
     initializeGameRenderer();
     initializeInputHandler();
 
@@ -55,7 +72,6 @@ public class Game extends ApplicationAdapter implements Observer {
     Gdx.gl.glClearColor(0.2f, 0.3f, 0.2f, 1);
     Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-    // Render game // TODO: Implement
     gameRenderer.render(entityManager.getEntities(), inputHandler.getSelectedEntity());
   }
 
@@ -73,7 +89,6 @@ public class Game extends ApplicationAdapter implements Observer {
   public void onEntityDeselected() {
 
   }
-
 
   private void calculateNewCameraPosition(float deltaTime) {
     // Camera movement
@@ -115,32 +130,36 @@ public class Game extends ApplicationAdapter implements Observer {
     camera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
     camera.zoom = 1.0f;
   }
+
   private void initializeGrid() {
-    this.grid = new Grid(128, 128, 32); // 32px tiles
+    this.grid = new Grid(GRID_WIDTH, GRID_HEIGHT, TILE_SIZE);
   }
+
   private void initializeGameRenderer() {
-    this.gameRenderer = new GameRenderer(camera, grid);
+    this.gameRenderer = new GameRenderer(camera, grid, coordinateConverter);
   }
+
   private void initializeEntityManager() {
     entityManager = new EntityManager();
   }
+
   private void initializeInputHandler() {
-    inputHandler = new InputHandler(camera, grid, entityManager);
+    inputHandler = new InputHandler(camera, grid, entityManager, coordinateConverter);
     Gdx.input.setInputProcessor(inputHandler);
-    inputHandler.addObserver(this); // TODO: Implement
+    inputHandler.addObserver(this);
+  }
+
+  private void initializeCoordinateConverter() {
+    this.coordinateConverter = new CoordinateConverter(TILE_SIZE);
   }
 
   private void createBase() {
     Component baseSupplyComponent = new BaseSupplyComponent(1);
-    Base homeBase = new Base("Base 1", EntityType.BASE, new Position2D(10, 10));
+    Base homeBase = new Base("Base 1", EntityType.BASE, new Position2D(BASE_INIT_X, BASE_INIT_Y));
     homeBase.addComponent(baseSupplyComponent);
     entityManager.addEntity(homeBase);
-
-    List<BaseRefuelPosition> refuelGridPositions = grid.getPositionsWithinDistance(homeBase.getPosition(), 1)
-            .stream()
-            .map(BaseRefuelPosition::new)
-            .toList();
   }
+
   private void createSupplyTruck() {
     Component truckMovement = new VehicleMovementComponent();
     Component truckSupply = new VehicleSupplyComponent(1);
@@ -151,6 +170,7 @@ public class Game extends ApplicationAdapter implements Observer {
     supplyTruck.addComponent(truckSupply);
     entityManager.addEntity(supplyTruck);
   }
+
   private void createCannon() {
     Component cannonMovement = new VehicleMovementComponent();
     Component cannonFuel = new FuelComponent(50, 2);
@@ -159,9 +179,11 @@ public class Game extends ApplicationAdapter implements Observer {
     cannon.addComponent(cannonFuel);
     entityManager.addEntity(cannon);
   }
+
   private void createFuelSystem() {
     fuelSystem = new FuelSystem();
   }
+
   private void createSupplyRuleEngine() {
     this.supplyRuleEngine = new SupplyRuleEngine(entityManager, fuelSystem);
   }

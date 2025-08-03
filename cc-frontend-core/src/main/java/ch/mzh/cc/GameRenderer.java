@@ -12,9 +12,11 @@ public class GameRenderer {
   private final ShapeRenderer shapeRenderer;
   private final OrthographicCamera camera;
   private final Grid grid;
+  private final CoordinateConverter coordinateConverter;
 
-  public GameRenderer(OrthographicCamera camera, Grid grid) {
+  public GameRenderer(OrthographicCamera camera, Grid grid, CoordinateConverter coordinateConverter) {
     this.shapeRenderer = new ShapeRenderer();
+    this.coordinateConverter = coordinateConverter;
     this.camera = camera;
     this.grid = grid;
   }
@@ -22,13 +24,9 @@ public class GameRenderer {
   public void render(List<Entity> entities, Entity selectedEntity) {
     shapeRenderer.setProjectionMatrix(camera.combined);
 
-    // Render grid and terrain
     renderGrid();
-
-    // Render entities
     renderEntities(entities, selectedEntity);
 
-    // Render selection indicator if there's a selected entity
     if (selectedEntity != null) {
       renderSelectionIndicator(selectedEntity);
     }
@@ -40,8 +38,7 @@ public class GameRenderer {
     for (Entity entity : entities) {
       if (!entity.isActive()) continue;
 
-      Position2D gridPos = grid.gridToWorld(entity.getPosition().getX(), entity.getPosition().getY());
-      Vector2 worldPos = new Vector2(gridPos.getX(), gridPos.getY());
+      Vector2 worldPos = coordinateConverter.gridToWorld(entity.getPosition());
       boolean isSelected = (entity == selectedEntity);
 
       // Set color and size based on entity type
@@ -88,23 +85,23 @@ public class GameRenderer {
     shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
 
     // Calculate visible grid bounds for optimization, convert camera bounds to backend grid coordinates
-    Position2D bottomLeft = grid.worldToGrid(camera.position.x - camera.viewportWidth * camera.zoom / 2, camera.position.y - camera.viewportHeight * camera.zoom / 2);
-    Position2D   topRight = grid.worldToGrid(camera.position.x + camera.viewportWidth * camera.zoom / 2, camera.position.y + camera.viewportHeight * camera.zoom / 2);
+    Position2D bottomLeft = coordinateConverter.worldToGrid(camera.position.x - camera.viewportWidth * camera.zoom / 2, camera.position.y - camera.viewportHeight * camera.zoom / 2);
+    Position2D topRight = coordinateConverter.worldToGrid(camera.position.x + camera.viewportWidth * camera.zoom / 2, camera.position.y + camera.viewportHeight * camera.zoom / 2);
 
-    int startX = Math.max(0, bottomLeft.getX() - 1);
-    int   endX = Math.min(grid.getWidth(), topRight.getX() + 1);
+    int startX = Math.max(0,               bottomLeft.getX() - 1);
+    int   endX = Math.min(grid.getWidth(),   topRight.getX() + 1);
 
-    int startY = Math.max(0, bottomLeft.getY() - 1);
-    int   endY = Math.min(grid.getHeight(), topRight.getY() + 1);
+    int startY = Math.max(0,                bottomLeft.getY() - 1);
+    int   endY = Math.min(grid.getHeight(),   topRight.getY() + 1);
 
     // Render terrain tiles
     for (int x = startX; x < endX; x++) {
       for (int y = startY; y < endY; y++) {
-        TerrainType terrain = grid.getTerrainAt(new Position2D(x, y));
+        Position2D thisTile = new Position2D(x, y);
+        TerrainType terrain = grid.getTerrainAt(thisTile);
 
         // Convert backend grid coordinates to LibGDX world coordinates for rendering
-        Position2D worldPosBackend = grid.gridToWorld(x, y);
-        Vector2 worldPos = new Vector2(worldPosBackend.getX(), worldPosBackend.getY());
+        Vector2 worldPos = coordinateConverter.gridToWorld(thisTile);
 
         // Set color based on terrain type
         switch (terrain) {
@@ -119,8 +116,7 @@ public class GameRenderer {
             break;
         }
 
-        shapeRenderer.rect(worldPos.x, worldPos.y,
-                grid.getTileSize() - 1, grid.getTileSize() - 1);
+        shapeRenderer.rect(worldPos.x, worldPos.y, grid.getTileSize() - 1, grid.getTileSize() - 1);
       }
     }
 
@@ -133,26 +129,6 @@ public class GameRenderer {
   private void renderGridLines(int startX, int endX, int startY, int endY) {
     shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
     shapeRenderer.setColor(0.2f, 0.2f, 0.2f, 0.5f);
-
-    // Only render grid lines when zoomed in enough
-    if (camera.zoom < 1.0f) {
-      // Vertical lines
-      for (int x = startX; x <= endX; x++) {
-        Position2D worldPos = grid.gridToWorld(x, startY);
-        Position2D worldPosEnd = grid.gridToWorld(x, endY);
-        shapeRenderer.line(worldPos.getX(), worldPos.getY(),
-                worldPos.getX(), worldPosEnd.getY());
-      }
-
-      // Horizontal lines
-      for (int y = startY; y <= endY; y++) {
-        Position2D worldPos = grid.gridToWorld(startX, y);
-        Position2D worldPosEnd = grid.gridToWorld(endX, y);
-        shapeRenderer.line(worldPos.getX(), worldPos.getY(),
-                worldPosEnd.getX(), worldPos.getY());
-      }
-    }
-
     shapeRenderer.end();
   }
 
@@ -160,15 +136,16 @@ public class GameRenderer {
     shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
     shapeRenderer.setColor(1.0f, 1.0f, 1.0f, 1.0f); // White selection border
 
-    Position2D gridPos = grid.gridToWorld(selectedEntity.getPosition().getX(), selectedEntity.getPosition().getY());
-    Vector2 worldPos = new Vector2(gridPos.getX(), gridPos.getY());
+    Vector2 worldPos = coordinateConverter.gridToWorld(selectedEntity.getPosition());
 
-    // Draw selection border around the tile
-    shapeRenderer.rect(worldPos.x, worldPos.y, grid.getTileSize(), grid.getTileSize());
+    drawSelectionBorderAroundTile(worldPos, grid.getTileSize());
+    drawCornerMarkers(worldPos, grid.getTileSize());
 
-    // Draw corner markers for better visibility
+    shapeRenderer.end();
+  }
+
+  private void drawCornerMarkers(Vector2 worldPos, int tileSize) {
     int cornerSize = 6;
-    int tileSize = grid.getTileSize();
 
     // Top-left corner
     shapeRenderer.line(worldPos.x, worldPos.y + tileSize, worldPos.x + cornerSize, worldPos.y + tileSize);
@@ -186,7 +163,10 @@ public class GameRenderer {
     shapeRenderer.line(worldPos.x + tileSize - cornerSize, worldPos.y, worldPos.x + tileSize, worldPos.y);
     shapeRenderer.line(worldPos.x + tileSize, worldPos.y, worldPos.x + tileSize, worldPos.y + cornerSize);
 
-    shapeRenderer.end();
+  }
+
+  private void drawSelectionBorderAroundTile(Vector2 worldPos, int tileSize) {
+    shapeRenderer.rect(worldPos.x, worldPos.y, tileSize, tileSize);
   }
 
 }
