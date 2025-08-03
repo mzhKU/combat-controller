@@ -1,0 +1,6 @@
+\.idea\.gitignore
+.idea
+.idea\*
+target
+*.class
+*.jar
