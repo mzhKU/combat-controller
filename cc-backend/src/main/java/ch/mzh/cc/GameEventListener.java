@@ -4,6 +4,7 @@ import ch.mzh.cc.model.Entity;
 
 public interface GameEventListener {
   default void onEntityMoved(Entity entity, Position2D oldPos, Position2D newPos) {}
+  default void onEntityMovedFailed(Entity movedEntity, Position2D oldPos, Position2D targetPosition, String failReason) {}
   default void onEntitySelected(Entity entity) {}
   default void onEntityDeselected() {}
   default void onEntityDestroyed(Entity entity) {}

@@ -23,8 +23,12 @@ public class GameEventManager {
     listeners.remove(listener);
   }
 
-  public void fireEntityMoved(Entity entity, Position2D oldPos, Position2D newPos) {
+  public void fireEntityMovedSuccessful(Entity entity, Position2D oldPos, Position2D newPos) {
     listeners.forEach(l -> l.onEntityMoved(entity, oldPos, newPos));
+  }
+
+  public void fireEntityMovedFailed(Entity entity, Position2D oldPos, Position2D newPos, String failureReason) {
+    listeners.forEach(l -> l.onEntityMovedFailed(entity, oldPos, newPos, failureReason));
   }
 
   public void fireEntitySelected(Entity entity) {
@@ -38,4 +42,5 @@ public class GameEventManager {
   public void fireFuelConsumed(Entity entity, int amount) {
     listeners.forEach(l -> l.onFuelConsumed(entity, amount));
   }
+
 }

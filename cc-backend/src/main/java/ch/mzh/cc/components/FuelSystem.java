@@ -4,6 +4,7 @@ import ch.mzh.cc.GameEventListener;
 import ch.mzh.cc.model.Entity;
 
 public class FuelSystem implements GameEventListener {
+
   public void transferFuel(Entity supplier, Entity receiver) {
     SupplyComponent supplyFuel = supplier.getComponent(SupplyComponent.class);
     FuelComponent targetFuel = receiver.getComponent(FuelComponent.class);
@@ -25,4 +26,5 @@ public class FuelSystem implements GameEventListener {
       System.out.println("REFUEL FAILED.");
     }
   }
+
 }

@@ -11,22 +11,18 @@ import com.badlogic.gdx.math.Vector3;
 import java.util.ArrayList;
 import java.util.List;
 
-public class InputHandler extends InputAdapter implements Observable {
+public class InputHandler extends InputAdapter {
 
   private final OrthographicCamera camera;
-  private final Grid grid;
-  private final EntityManager entityManager;
+  private final GameCore gameCore;
   private final Vector3 mouseWorldPos;
   private final CoordinateConverter coordinateConverter;
-  private final List<Observer> observers = new ArrayList<>(); // TODO: Initialize consistently
 
-  private Entity selectedEntity;
+  // private Entity selectedEntity;
 
-
-  public InputHandler(OrthographicCamera camera, Grid grid, EntityManager entityManager, CoordinateConverter coordinateConverter) {
+  public InputHandler(OrthographicCamera camera, GameCore gameCore, CoordinateConverter coordinateConverter) {
     this.camera = camera;
-    this.grid = grid;
-    this.entityManager = entityManager;
+    this.gameCore = gameCore;
     this.coordinateConverter = coordinateConverter;
     this.mouseWorldPos = new Vector3();
   }
@@ -34,84 +30,49 @@ public class InputHandler extends InputAdapter implements Observable {
   @Override
   public boolean touchDown(int screenX, int screenY, int pointer, int button) {
     if (button == Input.Buttons.LEFT) {
-      handleEntitySelection(screenX, screenY);
-      return true;
+      return handleEntitySelection(screenX, screenY);
     } else if (button == Input.Buttons.RIGHT) {
-      handleMovementCommandOfSelectedEntity(screenX, screenY);
-      return true;
+      return handleMovementCommandOfSelectedEntity(screenX, screenY);
     }
     return false;
   }
 
-  @Override
-  public void addObserver(Observer observer) {
-    System.out.println("Adding observer: " + observer);
-    observers.add(observer);
-  }
-
-  @Override
-  public void removeObserver(Observer observer) {
-    observers.remove(observer);
-  }
-
-  public Entity getSelectedEntity() {
-    return selectedEntity;
-  }
-
-  private void handleEntitySelection(int screenX, int screenY) {
+  private boolean handleEntitySelection(int screenX, int screenY) {
     convertScreenToWorldCoordinates(screenX, screenY); // TODO: Why this?
 
     Position2D selectedGridPosition = coordinateConverter.worldToGrid(mouseWorldPos.x, mouseWorldPos.y);
 
-    if (grid.isInvalidPosition(selectedGridPosition)) {
-      selectedEntity = null;
-      return;
+    if (gameCore.getGrid().isInvalidPosition(selectedGridPosition)) {
+      return false;
     }
 
-    Entity clickedEntity = entityManager.getEntityAt(selectedGridPosition);
-    updateEntityChangeListeners(clickedEntity);
+    return gameCore.selectEntity(selectedGridPosition);
   }
 
-  private void handleMovementCommandOfSelectedEntity(int screenX, int screenY) {
-    if (isImmobile(selectedEntity)) return;
+  private boolean handleMovementCommandOfSelectedEntity(int screenX, int screenY) {
+    // TODO: Clean up unit selection and movement of unit
+    if (isImmobile(gameCore.getSelectedEntity())) return false;
 
     convertScreenToWorldCoordinates(screenX, screenY); // TODO: why this?
 
     Position2D targetPosition = coordinateConverter.worldToGrid(mouseWorldPos.x, mouseWorldPos.y);
 
-    if (grid.isInvalidPosition(targetPosition)) {
+    if (gameCore.getGrid().isInvalidPosition(targetPosition)) {
+      // TODO: this should go into the FAILURE_REASON
       System.out.println("Invalid target position: (" + targetPosition.getX() + ", " + targetPosition.getY() + ")");
-      return;
+      return false;
     }
 
-    Entity entityAtTarget = entityManager.getEntityAt(targetPosition);
-    if (entityAtTarget != null && entityAtTarget != selectedEntity) {
+    Entity entityAtTarget = gameCore.getEntityManager().getEntityAt(targetPosition);
+    if (entityAtTarget != null && entityAtTarget != gameCore.getSelectedEntity()) {
+      // TODO: this should go into the FAILURE_REASON
       System.out.println("Cannot move to occupied position: " + entityAtTarget.getType() + " at (" + targetPosition.getX() + ", " + targetPosition.getY() + ")");
-      return;
+      return false;
     }
 
-    VehicleMovementComponent movement = selectedEntity.getComponent(VehicleMovementComponent.class);
-    boolean moved = movement.move(selectedEntity, targetPosition);
-
-    if (moved) {
-      printMovement(selectedEntity, targetPosition);
-      observers.forEach(o -> o.onEntityMoved(selectedEntity));
-    }
-    else {
-      System.out.println("Could not move."); // TODO: add reasons for not being able to move.
-    }
-  }
-
-  private void updateEntityChangeListeners(Entity entity) {
-    if (entity != null) {
-      if (entity != selectedEntity) {
-        selectedEntity = entity;
-        observers.forEach(o -> o.onEntitySelected(selectedEntity));
-      }
-    } else {
-      selectedEntity = null;
-      observers.forEach(Observer::onEntityDeselected);
-    }
+    // TODO: Should here be a return value
+    // TODO: Should frontend or backend react to the return value?
+    return gameCore.moveEntity(gameCore.getSelectedEntity(), targetPosition);
   }
 
   private void convertScreenToWorldCoordinates(int screenX, int screenY) {
@@ -129,8 +90,4 @@ public class InputHandler extends InputAdapter implements Observable {
     return false;
   }
 
-  private void printMovement(Entity selectedEntity, Position2D targetPosition) {
-    FuelComponent fuel = selectedEntity.getComponent(FuelComponent.class);
-    System.out.println("Moved " + selectedEntity.getName() + " to (" + targetPosition.getX() + ", " + targetPosition.getY() + "), fuel used: " + fuel.getLastFuelUsage() + ", fuel remaining: " + fuel.getCurrentFuel() + ".");
-  }
 }

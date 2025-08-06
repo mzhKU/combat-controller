@@ -28,11 +28,7 @@ public class SupplyRuleEngine implements GameEventListener {
     }
 
     @Override
-    public void onEntityMoved(Entity entity, Position2D oldPos, Position2D newPos) {
-
-    }
-
-    public void processMovement(Entity movedEntity, Position2D endPosition) {
+    public void onEntityMoved(Entity movedEntity, Position2D oldPos, Position2D endPosition) {
         rules.stream()
                 .map(rule -> rule.apply(entityManager, movedEntity, endPosition))
                 .flatMap(Optional::stream)

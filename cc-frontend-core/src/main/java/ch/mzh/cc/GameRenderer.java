@@ -11,14 +11,15 @@ import java.util.List;
 public class GameRenderer {
   private final ShapeRenderer shapeRenderer;
   private final OrthographicCamera camera;
-  private final Grid grid;
+  private final GameCore gameCore;
   private final CoordinateConverter coordinateConverter;
 
-  public GameRenderer(OrthographicCamera camera, Grid grid, CoordinateConverter coordinateConverter) {
+  public GameRenderer(OrthographicCamera camera, GameCore gameCore, CoordinateConverter coordinateConverter) {
     this.shapeRenderer = new ShapeRenderer();
-    this.coordinateConverter = coordinateConverter;
+
     this.camera = camera;
-    this.grid = grid;
+    this.gameCore = gameCore;
+    this.coordinateConverter = coordinateConverter;
   }
 
   public void render(List<Entity> entities, Entity selectedEntity) {
@@ -82,6 +83,7 @@ public class GameRenderer {
   }
 
   private void renderGrid() {
+    Grid grid = gameCore.getGrid();
     shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
 
     // Calculate visible grid bounds for optimization, convert camera bounds to backend grid coordinates
@@ -119,20 +121,19 @@ public class GameRenderer {
         shapeRenderer.rect(worldPos.x, worldPos.y, grid.getTileSize() - 1, grid.getTileSize() - 1);
       }
     }
-
     shapeRenderer.end();
 
-    // Render grid lines...
-    renderGridLines(startX, endX, startY, endY);
+    renderGridLines();
   }
 
-  private void renderGridLines(int startX, int endX, int startY, int endY) {
+  private void renderGridLines() {
     shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
     shapeRenderer.setColor(0.2f, 0.2f, 0.2f, 0.5f);
     shapeRenderer.end();
   }
 
   private void renderSelectionIndicator(Entity selectedEntity) {
+    Grid grid = gameCore.getGrid();
     shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
     shapeRenderer.setColor(1.0f, 1.0f, 1.0f, 1.0f); // White selection border
 
