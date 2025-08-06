@@ -1,0 +1,11 @@
+package ch.mzh.cc;
+
+import ch.mzh.cc.model.Entity;
+
+public interface GameEventListener {
+  default void onEntityMoved(Entity entity, Position2D oldPos, Position2D newPos) {}
+  default void onEntitySelected(Entity entity) {}
+  default void onEntityDeselected() {}
+  default void onEntityDestroyed(Entity entity) {}
+  default void onFuelConsumed(Entity entity, int amount) {}
+}

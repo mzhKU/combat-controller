@@ -12,7 +12,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-public class SupplyRuleEngine {
+public class SupplyRuleEngine implements GameEventListener {
     private final List<SupplyRule> rules;
     private final EntityManager entityManager;
     private final FuelSystem fuelSystem;
@@ -25,6 +25,11 @@ public class SupplyRuleEngine {
         );
         this.entityManager = entityManager;
         this.fuelSystem = fuelSystem;
+    }
+
+    @Override
+    public void onEntityMoved(Entity entity, Position2D oldPos, Position2D newPos) {
+
     }
 
     public void processMovement(Entity movedEntity, Position2D endPosition) {
