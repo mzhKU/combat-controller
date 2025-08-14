@@ -1,15 +1,11 @@
 package ch.mzh.cc;
 
-import ch.mzh.cc.components.FuelComponent;
-import ch.mzh.cc.components.VehicleMovementComponent;
+  import ch.mzh.cc.components.VehicleMovementComponent;
 import ch.mzh.cc.model.Entity;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.math.Vector3;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class InputHandler extends InputAdapter {
 
@@ -17,8 +13,6 @@ public class InputHandler extends InputAdapter {
   private final GameCore gameCore;
   private final Vector3 mouseWorldPos;
   private final CoordinateConverter coordinateConverter;
-
-  // private Entity selectedEntity;
 
   public InputHandler(OrthographicCamera camera, GameCore gameCore, CoordinateConverter coordinateConverter) {
     this.camera = camera;
@@ -32,7 +26,9 @@ public class InputHandler extends InputAdapter {
     if (button == Input.Buttons.LEFT) {
       return handleEntitySelection(screenX, screenY);
     } else if (button == Input.Buttons.RIGHT) {
-      return handleMovementCommandOfSelectedEntity(screenX, screenY);
+      if (gameCore.isEntitySelected()) {
+        return handleMovementCommandOfSelectedEntity(screenX, screenY);
+      }
     }
     return false;
   }
@@ -83,7 +79,7 @@ public class InputHandler extends InputAdapter {
   // TODO: Move to entity.
   // TODO: Prevent NPE when right-click on empty grid with no entity selected
   private boolean isImmobile(Entity selectedEntity) {
-    if (!selectedEntity.hasComponent(VehicleMovementComponent.class))      {
+    if (!selectedEntity.hasComponent(VehicleMovementComponent.class)) {
       System.out.println("This entity cannot move: " + selectedEntity.getName());
       return true;
     }

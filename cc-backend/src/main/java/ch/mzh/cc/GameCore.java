@@ -47,6 +47,10 @@ public class GameCore {
     return entityMoved;
   }
 
+  public boolean isEntitySelected() {
+    return selectedEntity != null;
+  }
+
   public boolean selectEntity(Position2D position) {
     Entity entity = entityManager.getEntityAt(position);
 
