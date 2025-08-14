@@ -1,6 +1,6 @@
 package ch.mzh.cc;
 
-  import ch.mzh.cc.components.VehicleMovementComponent;
+import ch.mzh.cc.components.VehicleMovementComponent;
 import ch.mzh.cc.model.Entity;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;

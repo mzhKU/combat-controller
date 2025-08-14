@@ -25,10 +25,7 @@ public class Game extends ApplicationAdapter implements GameEventListener {
   private OrthographicCamera camera;
   private GameCore gameCore;
   private GameRenderer gameRenderer;
-  private Grid grid; // TODO: access through gameCore
   private InputHandler inputHandler;
-  private FuelSystem fuelSystem; // TODO: access through GameCore
-  private SupplyRuleEngine supplyRuleEngine; // TODO: access through GameCore
   private CoordinateConverter coordinateConverter;
 
   // Camera movement
@@ -51,10 +48,10 @@ public class Game extends ApplicationAdapter implements GameEventListener {
     initializeGameRenderer();
     initializeInputHandler();
 
+    // TODO: Create in backend
     createBase();
     createSupplyTruck();
     createCannon();
-    createFuelSystem();
   }
 
   @Override
@@ -93,7 +90,7 @@ public class Game extends ApplicationAdapter implements GameEventListener {
 
   @Override
   public void onEntitySelected(Entity entity) {
-
+    // UI Animations etc
   }
 
   private void calculateNewCameraPosition(float deltaTime) {
@@ -181,9 +178,4 @@ public class Game extends ApplicationAdapter implements GameEventListener {
     cannon.addComponent(cannonFuel);
     gameCore.getEntityManager().addEntity(cannon);
   }
-
-  private void createFuelSystem() {
-    fuelSystem = new FuelSystem();
-  }
-
 }

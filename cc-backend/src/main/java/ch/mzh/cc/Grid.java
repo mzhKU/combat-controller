@@ -2,9 +2,6 @@ package ch.mzh.cc;
 
 import ch.mzh.cc.model.TerrainType;
 
-import java.util.Arrays;
-import java.util.List;
-
 public class Grid {
   private final int width;
   private final int height;
@@ -31,14 +28,10 @@ public class Grid {
     return terrain[position.getX()][position.getY()];
   }
 
-  public List<Position2D> getPositionsWithinDistance(Position2D position, int distance) {
-    return Arrays.stream(gridPositions)
-            .filter(p -> calculateManhattanDistance(p, position) == distance)
-            .toList();
-  }
-
   public int getWidth() { return width; }
+
   public int getHeight() { return height; }
+
   public int getTileSize() { return tileSize; }
 
   private void initializeTerrain() {
