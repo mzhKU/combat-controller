@@ -229,8 +229,10 @@ public class Game extends ApplicationAdapter implements GameEventListener {
 
   private void createBase(String entityName, int playerId, int x, int y) {
     Component baseSupplyComponent = new BaseSupplyComponent(1);
+    Component healthComponent = new HealthComponent(100);
     Base homeBase = new Base(entityName, EntityType.BASE, new Position2D(x, y), playerId);
     homeBase.addComponent(baseSupplyComponent);
+    homeBase.addComponent(healthComponent);
     gameCore.getEntityManager().addEntity(homeBase);
   }
 
@@ -238,21 +240,25 @@ public class Game extends ApplicationAdapter implements GameEventListener {
     Component truckMovement = new VehicleMovementComponent();
     Component truckSupply = new VehicleSupplyComponent(1);
     Component truckFuel = new FuelComponent(100, 1);
+    Component healthComponent = new HealthComponent(10);
     Entity supplyTruck = new SupplyTruck(entityName, SUPPLY_TRUCK, new Position2D(x, y), playerId);
     supplyTruck.addComponent(truckMovement);
     supplyTruck.addComponent(truckFuel);
     supplyTruck.addComponent(truckSupply);
+    supplyTruck.addComponent(healthComponent);
     gameCore.getEntityManager().addEntity(supplyTruck);
   }
 
   private void createCannon(String entityName, int playerId, int x, int y) {
     Component cannonMovement = new VehicleMovementComponent();
     Component cannonFuel = new FuelComponent(50, 2);
-    Component weapon = new CannonComponent(10, 1);
+    Component weapon = new CannonComponent(10, 10, 20);
+    Component healthComponent = new HealthComponent(50);
     Entity cannon = new Cannon(entityName, EntityType.CANNON, new Position2D(x, y), playerId);
     cannon.addComponent(cannonMovement);
     cannon.addComponent(cannonFuel);
     cannon.addComponent(weapon);
+    cannon.addComponent(healthComponent);
     gameCore.getEntityManager().addEntity(cannon);
   }
 

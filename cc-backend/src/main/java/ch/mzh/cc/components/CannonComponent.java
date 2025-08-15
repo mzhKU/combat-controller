@@ -6,9 +6,10 @@ public class CannonComponent implements Component {
   private final int range;
   private final int damage;
 
-  public CannonComponent(int range, int damage) {
+  public CannonComponent(int range, int damage, int magazine) {
     this.range = range;
     this.damage = damage;
+    this.magazine = magazine;
   }
 
   public boolean canFire() {
@@ -16,7 +17,7 @@ public class CannonComponent implements Component {
   }
 
   public void fire() {
-    magazine--;
+      magazine--;
   }
 
   public int getRange() {
@@ -25,6 +26,10 @@ public class CannonComponent implements Component {
 
   public int getDamage() {
     return this.damage;
+  }
+
+  public int getMagazine() {
+    return this.magazine;
   }
 
 }

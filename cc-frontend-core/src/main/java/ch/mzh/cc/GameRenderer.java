@@ -402,7 +402,7 @@ public class GameRenderer {
       if (cannonComp != null) {
         // TODO: CannonComponent doesn't have ammo tracking in the current implementation
         // This would need to be added to show ammunition
-        cannonInfo += ", A=?";
+        cannonInfo += String.format(", A=%d", cannonComp.getMagazine());
       }
       font.draw(spriteBatch, cannonInfo, x + 5, y + 30);
     }

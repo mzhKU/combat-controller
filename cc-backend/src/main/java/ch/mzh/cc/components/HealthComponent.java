@@ -1,11 +1,14 @@
 package ch.mzh.cc.components;
 
 public class HealthComponent implements Component {
-  private int currentHealth;
-  private int maxHealth = 10;
+  private int health;
+
+  public HealthComponent(int health) {
+    this.health = health;
+  }
 
   public boolean takeDamage(int damage) {
-    currentHealth -= damage;
-    return currentHealth <= 0; // returns true if destroyed
+    health -= damage;
+    return health <= 0; // returns true if destroyed
   }
 }
