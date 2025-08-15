@@ -29,18 +29,32 @@ public class InputHandler extends InputAdapter {
   private final CoordinateConverter coordinateConverter;
   private final CommandProcessor commandProcessor;
   private final GameCore gameCore;
+  private final GameRenderer gameRenderer;
 
-  public InputHandler(OrthographicCamera camera, CoordinateConverter coordinateConverter, CommandProcessor commandProcessor, GameCore gameCore) {
+  public InputHandler(OrthographicCamera camera, CoordinateConverter coordinateConverter, CommandProcessor commandProcessor, GameCore gameCore, GameRenderer gameRenderer) {
     this.camera = camera;
     this.coordinateConverter = coordinateConverter;
     this.mouseWorldPos = new Vector3();
     this.commandProcessor = commandProcessor;
     this.gameCore = gameCore;
+    this.gameRenderer = gameRenderer;
   }
 
   @Override
   public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-    Position2D gridPositionFromScreen = getGridPositionFromScreen(screenX, screenY);
+    // Convert screen coordinates to world coordinates
+    mouseWorldPos.set(screenX, screenY, 0);
+    camera.unproject(mouseWorldPos);
+
+    // HERE NEW CODE - Check if end turn button was clicked
+    if (gameRenderer.isEndTurnButtonClicked(mouseWorldPos.x, mouseWorldPos.y)) {
+      int currentPlayer = gameCore.getGameState().getCurrentPlayerId();
+      commandProcessor.queueCommand(new EndTurnCommand(currentPlayer));
+      commandProcessor.executeNextCommand();
+      return true;
+    }
+
+    Position2D gridPositionFromScreen = coordinateConverter.worldToGrid(mouseWorldPos.x, mouseWorldPos.y);
 
     if (button == Input.Buttons.LEFT) {
       commandProcessor.queueCommand(new SelectEntityCommand(gridPositionFromScreen));
@@ -90,12 +104,6 @@ public class InputHandler extends InputAdapter {
 
   private boolean isEnemy(Entity target, Entity selected) {
     return target.isEnemy(selected);
-  }
-
-  private Position2D getGridPositionFromScreen(int screenX, int screenY) {
-    mouseWorldPos.set(screenX, screenY, 0);
-    camera.unproject(mouseWorldPos);
-    return coordinateConverter.worldToGrid(mouseWorldPos.x, mouseWorldPos.y);
   }
 
   private CommandMode determineActiveMode(Position2D position) {

@@ -22,6 +22,10 @@ public class GameRenderer {
   private static final float SUPPLY_TRUCK_SIZE_RATIO = 0.6f; // 6px for 10px tile
   private static final float TROOP_SIZE_RATIO = 0.6f;
 
+  private static final float BUTTON_WIDTH = 80f;
+  private static final float BUTTON_HEIGHT = 30f;
+  private static final float BUTTON_MARGIN = 10f;
+
   public GameRenderer(OrthographicCamera camera, GameCore gameCore, CoordinateConverter coordinateConverter) {
     this.shapeRenderer = new ShapeRenderer();
     this.camera = camera;
@@ -41,6 +45,15 @@ public class GameRenderer {
     }
 
     renderModeIndicator(commandMode); // Show active mode
+    renderUI();
+  }
+
+  public boolean isEndTurnButtonClicked(float worldX, float worldY) {
+    float buttonX = camera.position.x + camera.viewportWidth * camera.zoom / 2 - BUTTON_WIDTH - BUTTON_MARGIN;
+    float buttonY = camera.position.y + camera.viewportHeight * camera.zoom / 2 - BUTTON_HEIGHT - BUTTON_MARGIN;
+
+    return worldX >= buttonX && worldX <= buttonX + BUTTON_WIDTH &&
+            worldY >= buttonY && worldY <= buttonY + BUTTON_HEIGHT;
   }
 
   private void renderEntities(List<Entity> entities, Entity selectedEntity) {
@@ -234,5 +247,48 @@ public class GameRenderer {
   private void renderActionPreview(Entity selected, CommandMode mode) {
     // Show movement range or fire range based on mode
     // This is optional for first implementation
+  }
+
+  private void renderUI() {
+    shapeRenderer.begin(Filled);
+
+    // Render current player indicator
+    renderPlayerIndicator();
+
+    // Render end turn button
+    renderEndTurnButton();
+
+    shapeRenderer.end();
+  }
+
+  private void renderPlayerIndicator() {
+    int currentPlayer = gameCore.getGameState().getCurrentPlayerId();
+
+    // Position at top-left of screen
+    float x = camera.position.x - camera.viewportWidth * camera.zoom / 2 + BUTTON_MARGIN;
+    float y = camera.position.y + camera.viewportHeight * camera.zoom / 2 - BUTTON_MARGIN - 20;
+
+    // Set color based on current player
+    if (currentPlayer == 1) {
+      shapeRenderer.setColor(0.0f, 0.0f, 1.0f, 0.8f); // Blue for player 1
+    } else {
+      shapeRenderer.setColor(1.0f, 0.0f, 0.0f, 0.8f); // Red for player 2
+    }
+
+    shapeRenderer.rect(x, y, 100, 20);
+  }
+
+  private void renderEndTurnButton() {
+    // Position at top-right of screen
+    float x = camera.position.x + camera.viewportWidth * camera.zoom / 2 - BUTTON_WIDTH - BUTTON_MARGIN;
+    float y = camera.position.y + camera.viewportHeight * camera.zoom / 2 - BUTTON_HEIGHT - BUTTON_MARGIN;
+
+    // Button background
+    shapeRenderer.setColor(0.3f, 0.3f, 0.3f, 0.8f);
+    shapeRenderer.rect(x, y, BUTTON_WIDTH, BUTTON_HEIGHT);
+
+    // Button border
+    shapeRenderer.setColor(1.0f, 1.0f, 1.0f, 1.0f);
+    shapeRenderer.rect(x, y, BUTTON_WIDTH, BUTTON_HEIGHT);
   }
 }

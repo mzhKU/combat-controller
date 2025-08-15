@@ -54,6 +54,8 @@ public class Game extends ApplicationAdapter implements GameEventListener {
     initializeCamera();
     initializeGameCore();
 
+    gameCore.getGameState().initializeRandomStartingPlayer();
+
     initializeCoordinateConverter();
     initializeGameRenderer();
     initializeCommandProcessor();
@@ -122,7 +124,9 @@ public class Game extends ApplicationAdapter implements GameEventListener {
 
   @Override
   public void onTurnEnded(int playerId) {
-    // TODO: Switch active player?
+    System.out.println("Player " + playerId + " ended their turn");
+    System.out.println("Now it's Player " + gameCore.getGameState().getCurrentPlayerId() + "'s turn");
+
   }
 
   private void calculateNewCameraPosition(float deltaTime) {
@@ -184,7 +188,7 @@ public class Game extends ApplicationAdapter implements GameEventListener {
   }
 
   private void initializeInputHandler() {
-    inputHandler = new InputHandler(camera, coordinateConverter, commandProcessor, gameCore);
+    inputHandler = new InputHandler(camera, coordinateConverter, commandProcessor, gameCore, gameRenderer);
     Gdx.input.setInputProcessor(inputHandler);
   }
 

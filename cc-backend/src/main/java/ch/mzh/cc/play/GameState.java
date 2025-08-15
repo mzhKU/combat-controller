@@ -1,5 +1,7 @@
 package ch.mzh.cc.play;
 
+import ch.mzh.cc.model.Entity;
+
 public class GameState {
 
   private GamePhase currentPhase = GamePhase.PLAYER1_TURN;
@@ -17,4 +19,19 @@ public class GameState {
     if (currentPhase == GamePhase.PLAYER1_TURN) turnNumber++;
   }
 
+  public void initializeRandomStartingPlayer() {
+    currentPhase = Math.random() < 0.5 ? GamePhase.PLAYER1_TURN : GamePhase.PLAYER2_TURN;
+  }
+
+  public int getCurrentPlayerId() {
+    return switch (currentPhase) {
+      case PLAYER1_TURN -> 1;
+      case PLAYER2_TURN -> 2;
+      case GAME_OVER -> -1;
+    };
+  }
+
+  public boolean canSelectEntity(Entity entity) {
+    return entity.getPlayerId() == getCurrentPlayerId();
+  }
 }

@@ -19,12 +19,17 @@ public class MoveEntityCommand extends GameCommand {
       return false;
     }
 
+    Entity selectedEntity = gameCore.getSelectedEntity();
+
+    if (!gameCore.getGameState().canSelectEntity(selectedEntity)) {
+      failureReason = "Cannot move opponent's unit";
+      return false;
+    }
+
     if (gameCore.getGrid().isInvalidPosition(targetPosition)) {
       failureReason = "Invalid target position: (" + targetPosition.getX() + ", " + targetPosition.getY() + ")";
       return false;
     }
-
-    Entity selectedEntity = gameCore.getSelectedEntity();
 
     // Check if position is occupied by another entity
     return gameCore.getEntityManager().getEntityAt(targetPosition)

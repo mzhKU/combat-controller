@@ -2,6 +2,7 @@ package ch.mzh.cc.command;
 
 import ch.mzh.cc.GameCore;
 import ch.mzh.cc.Position2D;
+import ch.mzh.cc.model.Entity;
 
 public class SelectEntityCommand extends GameCommand {
   private final Position2D position;
@@ -17,6 +18,19 @@ public class SelectEntityCommand extends GameCommand {
 
   @Override
   public boolean canExecute(GameCore gameCore) {
-    return true; // TODO: Should this contain any logic?
+    Entity entityAtPosition = gameCore.getEntityManager().getEntityAt(position).orElse(null);
+
+    if (entityAtPosition == null) {
+      // Allow deselection by clicking empty space
+      return true;
+    }
+
+    // Check if entity belongs to current player
+    if (!gameCore.getGameState().canSelectEntity(entityAtPosition)) {
+      failureReason = "Cannot select opponent's unit";
+      return false;
+    }
+
+    return true;
   }
 }

@@ -24,6 +24,11 @@ public class FireCommand extends GameCommand {
       return false;
     }
 
+    if (!gameCore.getGameState().canSelectEntity(selected)) {
+      failureReason = "Cannot fire with opponent's unit";
+      return false;
+    }
+
     CannonComponent weapon = selected.getComponent(CannonComponent.class);
     if (weapon == null) {
       failureReason = selected.getName() + " cannot fire";

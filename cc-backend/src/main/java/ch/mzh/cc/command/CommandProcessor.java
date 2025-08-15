@@ -32,18 +32,16 @@ public class CommandProcessor {
     commandQueue.offer(command);
   }
 
-  public boolean executeNextCommand() {
+  public void executeNextCommand() {
     Command command = commandQueue.poll();
 
-    if (command == null) return false;
+    if (command == null) return;
 
     if (command.execute(gameCore)) {
       executedCommands.add(command);
-      return true;
     } else {
       failedCommands.add(command);
       System.out.println("Command failed: " + command.getFailureReason());
-      return false;
     }
   }
 
