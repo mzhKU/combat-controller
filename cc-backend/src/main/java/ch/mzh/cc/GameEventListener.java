@@ -9,4 +9,5 @@ public interface GameEventListener {
   default void onEntityDeselected() {}
   default void onEntityDestroyed(Entity entity) {}
   default void onFuelConsumed(Entity entity, int amount) {}
+  default void onTurnEnded(int playerId) {}
 }

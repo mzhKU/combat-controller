@@ -3,8 +3,13 @@ package ch.mzh.cc.components;
 public class CannonComponent implements Component {
 
   private int magazine;
-  private int range = 10;
-  private int damage = 1;
+  private final int range;
+  private final int damage;
+
+  public CannonComponent(int range, int damage) {
+    this.range = range;
+    this.damage = damage;
+  }
 
   public boolean canFire() {
     return magazine > 0;

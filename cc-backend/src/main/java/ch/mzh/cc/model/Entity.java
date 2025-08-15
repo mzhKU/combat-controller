@@ -10,6 +10,7 @@ public class Entity {
     private String name;
     private EntityType type;
     private Position2D position;
+    private int playerId;
 
     // private Vector2 worldPosition;
     private boolean active;
@@ -19,20 +20,18 @@ public class Entity {
 
     public Entity() {}
     
-    public Entity(String name, EntityType type, Position2D position) {
+    public Entity(String name, EntityType type, Position2D position, int playerId) {
         this.name = name;
         this.type = type;
         this.components = new HashMap<>();
         this.position = position;
-        // this.worldPosition = new Vector2();
+        this.playerId = playerId;
         this.active = true;
-        this.selectable = true; // Most entities are selectable by default
-        // updateWorldPosition(); // TODO: Refactor to frontend
+        this.selectable = true;
     }
 
     public void setGridPosition(Position2D position) {
         this.position = position;
-        // updateWorldPosition(); // TODO: Refactor to frontend
     }
 
     public <T extends Component> void addComponent(T component) {
@@ -41,13 +40,11 @@ public class Entity {
 
     @SuppressWarnings("unchecked")
     public <T extends Component> T getComponent(Class<T> componentType) {
-        // First try exact match (for performance)
         Component component = components.get(componentType);
         if (component != null) {
             return (T) component;
         }
 
-        // Then try inheritance match
         for (Component comp : components.values()) {
             if (componentType.isAssignableFrom(comp.getClass())) {
                 return (T) comp;
@@ -64,18 +61,13 @@ public class Entity {
         components.remove(componentType);
     }
 
-    /*
-    private void updateWorldPosition() {
-        worldPosition.set(position.getX() * 32, position.getY() * 32);
-    }
-    */
-
     // Getters
     public String getName() { return this.name; }
     public EntityType getType() { return type; }
     public Position2D getPosition() { return position; }
     public boolean isActive() { return active; }
     public boolean isSelectable() { return selectable; }
+    public int getPlayerId() { return this.playerId; }
 
     // Setters
     public void setName(String name) { this.name = name; }

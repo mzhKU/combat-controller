@@ -35,27 +35,31 @@ public class Grid {
   public int getTileSize() { return tileSize; }
 
   private void initializeTerrain() {
-    // Same as your current implementation
+    // Initialize all terrain as open ground
     for (int x = 0; x < width; x++) {
       for (int y = 0; y < height; y++) {
         terrain[x][y] = TerrainType.OPEN_GROUND;
       }
     }
 
-    // Add some rough terrain patches
-    for (int i = 0; i < width*100-20; i++) {
+    // Add some rough terrain patches - reduced density for smaller tiles
+    int roughTerrainCount = Math.max(50, width * height / 20);
+    for (int i = 0; i < roughTerrainCount; i++) {
       int x = (int)(Math.random() * width);
       int y = (int)(Math.random() * height);
-      if (x > 20 && x < width - 20 && y > 20 && y < height - 20) {
+      // Keep some border free
+      if (x > 5 && x < width - 5 && y > 5 && y < height - 5) {
         terrain[x][y] = TerrainType.ROUGH_TERRAIN;
       }
     }
 
-    // Add some obstacles
-    for (int i = 0; i < width*100-40; i++) {
+    // Add some obstacles - reduced density for smaller tiles
+    int obstacleCount = Math.max(25, width * height / 40);
+    for (int i = 0; i < obstacleCount; i++) {
       int x = (int)(Math.random() * width);
       int y = (int)(Math.random() * height);
-      if (x > 20 && x < width - 20 && y > 20 && y < height - 20) {
+      // Keep some border free
+      if (x > 5 && x < width - 5 && y > 5 && y < height - 5) {
         terrain[x][y] = TerrainType.OBSTACLE;
       }
     }

@@ -1,12 +1,7 @@
 package ch.mzh.cc;
 
 import ch.mzh.cc.command.CommandProcessor;
-import ch.mzh.cc.components.BaseSupplyComponent;
-import ch.mzh.cc.components.Component;
-import ch.mzh.cc.components.FuelComponent;
-import ch.mzh.cc.components.FuelSystem;
-import ch.mzh.cc.components.VehicleMovementComponent;
-import ch.mzh.cc.components.VehicleSupplyComponent;
+import ch.mzh.cc.components.*;
 import ch.mzh.cc.model.Base;
 import ch.mzh.cc.model.Cannon;
 import ch.mzh.cc.model.Entity;
@@ -31,15 +26,28 @@ public class Game extends ApplicationAdapter implements GameEventListener {
   private CommandProcessor commandProcessor;
 
   // Camera movement
-  private static final float CAMERA_SPEED = 600f;
+  private static final float CAMERA_SPEED = 100f;
   private static final float ZOOM_SPEED = 1.0f;
-  private static final float MIN_ZOOM = 0.1f;
-  private static final float MAX_ZOOM = 2.0f;
+  private static final float MIN_ZOOM = 0.5f;
+  private static final float MAX_ZOOM = 3.0f;
 
-  private static final int TILE_SIZE = 32; // 32px tiles
+  // TODO: Use same value here and in GameCore
+  private static final int TILE_SIZE = 10; // 10px tiles
 
-  private static final int BASE_INIT_X = 10;
-  private static final int BASE_INIT_Y = 10;
+
+  private static final int   BASE_PLAYER_1_INIT_X = 10;
+  private static final int   BASE_PLAYER_1_INIT_Y = 10;
+  private static final int  TRUCK_PLAYER_1_INIT_X =  8;
+  private static final int  TRUCK_PLAYER_1_INIT_Y =  8;
+  private static final int CANNON_PLAYER_1_INIT_X = 15;
+  private static final int CANNON_PLAYER_1_INIT_Y = 15;
+
+  private static final int   BASE_PLAYER_2_INIT_X = 10;
+  private static final int   BASE_PLAYER_2_INIT_Y = 38;
+  private static final int  TRUCK_PLAYER_2_INIT_X =  8;
+  private static final int  TRUCK_PLAYER_2_INIT_Y = 32;
+  private static final int CANNON_PLAYER_2_INIT_X = 15;
+  private static final int CANNON_PLAYER_2_INIT_Y = 35;
 
   @Override
   public void create() {
@@ -51,10 +59,17 @@ public class Game extends ApplicationAdapter implements GameEventListener {
     initializeCommandProcessor();
     initializeInputHandler();
 
-    // TODO: Create in backend
-    createBase();
-    createSupplyTruck();
-    createCannon();
+    // PLAYER 1
+    createBase(               "Base 1", 1,   BASE_PLAYER_1_INIT_X,   BASE_PLAYER_1_INIT_Y);
+    createSupplyTruck("Supply Truck 1", 1,  TRUCK_PLAYER_1_INIT_X,  TRUCK_PLAYER_1_INIT_Y);
+    createCannon(           "Cannon 1", 1, CANNON_PLAYER_1_INIT_X, CANNON_PLAYER_1_INIT_Y);
+
+    // PLAYER 2
+    createBase(               "Base 2", 2,   BASE_PLAYER_2_INIT_X,   BASE_PLAYER_2_INIT_Y);
+    createSupplyTruck("Supply Truck 2", 2,  TRUCK_PLAYER_2_INIT_X,  TRUCK_PLAYER_2_INIT_Y);
+    createCannon(           "Cannon 2", 2, CANNON_PLAYER_2_INIT_X, CANNON_PLAYER_2_INIT_Y);
+
+    setupInitialCameraView();
   }
 
   @Override
@@ -105,21 +120,27 @@ public class Game extends ApplicationAdapter implements GameEventListener {
     System.out.println("Destroyed entity: " + destroyedEntity.getName());
   }
 
+  @Override
+  public void onTurnEnded(int playerId) {
+    // TODO: Switch active player?
+  }
+
   private void calculateNewCameraPosition(float deltaTime) {
     // Camera movement
     Vector3 cameraMovement = new Vector3();
+    float adjustedSpeed = CAMERA_SPEED * camera.zoom;
 
     if (Gdx.input.isKeyPressed(Input.Keys.A) || Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
-      cameraMovement.x -= CAMERA_SPEED * deltaTime;
+      cameraMovement.x -= adjustedSpeed * deltaTime;
     }
     if (Gdx.input.isKeyPressed(Input.Keys.D) || Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
-      cameraMovement.x += CAMERA_SPEED * deltaTime;
+      cameraMovement.x += adjustedSpeed * deltaTime;
     }
     if (Gdx.input.isKeyPressed(Input.Keys.W) || Gdx.input.isKeyPressed(Input.Keys.UP)) {
-      cameraMovement.y += CAMERA_SPEED * deltaTime;
+      cameraMovement.y += adjustedSpeed * deltaTime;
     }
     if (Gdx.input.isKeyPressed(Input.Keys.S) || Gdx.input.isKeyPressed(Input.Keys.DOWN)) {
-      cameraMovement.y -= CAMERA_SPEED * deltaTime;
+      cameraMovement.y -= adjustedSpeed * deltaTime;
     }
 
     camera.translate(cameraMovement);
@@ -133,17 +154,24 @@ public class Game extends ApplicationAdapter implements GameEventListener {
     }
 
     // Keep camera within bounds
+    Grid grid = gameCore.getGrid();
+    float worldWidth = grid.getWidth() * TILE_SIZE;
+    float worldHeight = grid.getHeight() * TILE_SIZE;
+
     float halfWidth = camera.viewportWidth * camera.zoom / 2;
     float halfHeight = camera.viewportHeight * camera.zoom / 2;
 
-    // camera.position.x = Math.max(halfWidth, Math.min(camera.position.x, gameGrid.getWorldWidth() - halfWidth));
-    // camera.position.y = Math.max(halfHeight, Math.min(camera.position.y, gameGrid.getWorldHeight() - halfHeight));
+    // camera.position.x = Math.max(halfWidth, Math.min(camera.position.x, worldWidth - halfWidth));
+    // camera.position.y = Math.max(halfHeight, Math.min(camera.position.y, worldHeight - halfHeight));
   }
 
   private void initializeCamera() {
+    // Set up camera with vertical aspect ratio (mobile-like)
+    float screenWidth = Gdx.graphics.getWidth();
+    float screenHeight = Gdx.graphics.getHeight();
+
     camera = new OrthographicCamera();
-    camera.setToOrtho(false, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-    camera.zoom = 1.0f;
+    camera.setToOrtho(false, screenWidth, screenHeight);
   }
 
   private void initializeGameCore() {
@@ -168,35 +196,60 @@ public class Game extends ApplicationAdapter implements GameEventListener {
     this.commandProcessor = new CommandProcessor(gameCore);
   }
 
+  private void setupInitialCameraView() {
+    // Calculate zoom level to show full grid
+    Grid grid = gameCore.getGrid();
+    float worldWidth = grid.getWidth() * TILE_SIZE;
+    float worldHeight = grid.getHeight() * TILE_SIZE;
+
+    float zoomX = camera.viewportWidth / worldWidth;
+    float zoomY = camera.viewportHeight / worldHeight;
+
+    // Use the larger zoom value to ensure entire grid is visible
+    camera.zoom = Math.max(zoomX, zoomY);
+
+    // Clamp zoom to our limits
+    camera.zoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, camera.zoom));
+
+    // Center camera on grid
+    camera.position.x = worldWidth / 2;
+    camera.position.y = worldHeight / 2;
+
+    camera.update();
+  }
+
   private void clearScreen() {
     Gdx.gl.glClearColor(0.2f, 0.3f, 0.2f, 1);
     Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
   }
 
-  private void createBase() {
+  private void createBase(String entityName, int playerId, int x, int y) {
     Component baseSupplyComponent = new BaseSupplyComponent(1);
-    Base homeBase = new Base("Base 1", EntityType.BASE, new Position2D(BASE_INIT_X, BASE_INIT_Y));
+    Base homeBase = new Base(entityName, EntityType.BASE, new Position2D(x, y), playerId);
     homeBase.addComponent(baseSupplyComponent);
     gameCore.getEntityManager().addEntity(homeBase);
   }
 
-  private void createSupplyTruck() {
+  private void createSupplyTruck(String entityName, int playerId, int x, int y) {
     Component truckMovement = new VehicleMovementComponent();
     Component truckSupply = new VehicleSupplyComponent(1);
     Component truckFuel = new FuelComponent(100, 1);
-    Entity supplyTruck = new SupplyTruck("Supply Truck 1", SUPPLY_TRUCK, new Position2D(8, 8));
+    Entity supplyTruck = new SupplyTruck(entityName, SUPPLY_TRUCK, new Position2D(x, y), playerId);
     supplyTruck.addComponent(truckMovement);
     supplyTruck.addComponent(truckFuel);
     supplyTruck.addComponent(truckSupply);
     gameCore.getEntityManager().addEntity(supplyTruck);
   }
 
-  private void createCannon() {
+  private void createCannon(String entityName, int playerId, int x, int y) {
     Component cannonMovement = new VehicleMovementComponent();
     Component cannonFuel = new FuelComponent(50, 2);
-    Entity cannon = new Cannon("Cannon 1", EntityType.CANNON, new Position2D(15, 15));
+    Component weapon = new CannonComponent(10, 1);
+    Entity cannon = new Cannon(entityName, EntityType.CANNON, new Position2D(x, y), playerId);
     cannon.addComponent(cannonMovement);
     cannon.addComponent(cannonFuel);
+    cannon.addComponent(weapon);
     gameCore.getEntityManager().addEntity(cannon);
   }
+
 }

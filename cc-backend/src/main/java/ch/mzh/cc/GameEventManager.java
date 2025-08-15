@@ -43,6 +43,10 @@ public class GameEventManager {
     // Notify listeners
   }
 
+  public void fireTurnEnded(int playerId) {
+    listeners.forEach(l -> l.onTurnEnded(playerId));
+  }
+
   public void fireEntityDeselected() {
     listeners.forEach(l -> l.onEntityDeselected());
   }

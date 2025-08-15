@@ -6,19 +6,25 @@ import ch.mzh.cc.components.FuelSystem;
 import ch.mzh.cc.components.HealthComponent;
 import ch.mzh.cc.components.VehicleMovementComponent;
 import ch.mzh.cc.model.Entity;
+import ch.mzh.cc.play.GameState;
 
 public class GameCore {
 
-  private final Grid grid; // TODO: Initialize
-  private Entity selectedEntity; // TODO: Could be in a "GameState"?
+  private final Grid grid;
+  private Entity selectedEntity;
   private final CommandProcessor commandProcessor;
 
   private final GameEventManager gameEventManager;
   private final EntityManager entityManager;
+  private final GameState gameState;
+
 
   private static final int GRID_WIDTH = 40;
-  private static final int GRID_HEIGHT = 40;
-  private static final int TILE_SIZE = 32; // 32px tiles
+  private static final int GRID_HEIGHT = 80;
+
+  // TODO: Use same value here and in Game
+  private static final int TILE_SIZE = 10; // 10px tiles
+
   private static final String FAILURE_REASON = "DEFAULT_REASON";
 
   public GameCore() {
@@ -26,6 +32,8 @@ public class GameCore {
     this.entityManager = new EntityManager();
     this.grid = new Grid(GRID_WIDTH, GRID_HEIGHT, TILE_SIZE);
     this.commandProcessor = new CommandProcessor(this);
+    this.gameState = new GameState();
+
     FuelSystem fuelSystem = new FuelSystem();
     SupplyRuleEngine supplyRuleEngine = new SupplyRuleEngine(entityManager, fuelSystem);
 
@@ -105,6 +113,10 @@ public class GameCore {
 
   public Grid getGrid() {
     return this.grid;
+  }
+
+  public GameState getGameState() {
+    return this.gameState;
   }
 
   public CommandProcessor getCommandProcessor() {
