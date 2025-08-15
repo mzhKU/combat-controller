@@ -67,7 +67,11 @@ public class Game extends ApplicationAdapter implements GameEventListener {
     camera.update();
     clearScreen();
 
-    gameRenderer.render(gameCore.getEntityManager().getEntities(), gameCore.getSelectedEntity());
+    gameRenderer.render(
+            gameCore.getEntityManager().getEntities(),
+            gameCore.getSelectedEntity(),
+            inputHandler.getCommandMode()
+    );
   }
 
   @Override
@@ -93,6 +97,12 @@ public class Game extends ApplicationAdapter implements GameEventListener {
   @Override
   public void onEntitySelected(Entity entity) {
     // UI Animations etc
+  }
+
+  @Override
+  public void onEntityDestroyed(Entity destroyedEntity) {
+    // Animations, update counters, check for WIN / LOSE conditions...
+    System.out.println("Destroyed entity: " + destroyedEntity.getName());
   }
 
   private void calculateNewCameraPosition(float deltaTime) {
@@ -146,7 +156,7 @@ public class Game extends ApplicationAdapter implements GameEventListener {
   }
 
   private void initializeInputHandler() {
-    inputHandler = new InputHandler(camera, coordinateConverter, commandProcessor);
+    inputHandler = new InputHandler(camera, coordinateConverter, commandProcessor, gameCore);
     Gdx.input.setInputProcessor(inputHandler);
   }
 

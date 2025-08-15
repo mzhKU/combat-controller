@@ -1,7 +1,5 @@
 package ch.mzh.cc.components;
 
-import ch.mzh.cc.components.Component;
-
 public class FuelComponent implements Component {
 
     private int currentFuel;

@@ -1,7 +1,9 @@
 package ch.mzh.cc;
 
 import ch.mzh.cc.command.CommandProcessor;
+import ch.mzh.cc.components.CannonComponent;
 import ch.mzh.cc.components.FuelSystem;
+import ch.mzh.cc.components.HealthComponent;
 import ch.mzh.cc.components.VehicleMovementComponent;
 import ch.mzh.cc.model.Entity;
 
@@ -49,10 +51,6 @@ public class GameCore {
     return entityMoved;
   }
 
-  public boolean isEntitySelected() {
-    return selectedEntity != null;
-  }
-
   public boolean selectEntity(Position2D position) {
     Entity entity = entityManager.getEntityAt(position);
 
@@ -64,6 +62,33 @@ public class GameCore {
     selectedEntity = entity;
     gameEventManager.fireEntitySelected(selectedEntity);
     return true;
+  }
+
+  public boolean fireAtPosition(Entity shooter, Position2D targetPosition) {
+    if (grid.isInvalidPosition(targetPosition)) return false;
+
+    CannonComponent weapon = shooter.getComponent(CannonComponent.class);
+    weapon.fire();
+
+    // Simple hit calculation - you can make this more sophisticated
+    Entity target = entityManager.getEntityAt(targetPosition);
+    boolean hit = target != null;
+
+    if (hit) {
+      HealthComponent health = target.getComponent(HealthComponent.class);
+      if (health != null && health.takeDamage(weapon.getDamage())) {
+        // Target destroyed
+        entityManager.removeEntity(target);
+        gameEventManager.fireEntityDestroyed(target);
+      }
+    }
+
+    gameEventManager.fireEntityFired(shooter, targetPosition, hit);
+    return true;
+  }
+
+  public boolean noEntitySelected() {
+    return selectedEntity == null;
   }
 
   public Entity getSelectedEntity() {

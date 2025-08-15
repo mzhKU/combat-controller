@@ -1,15 +1,14 @@
 package ch.mzh.cc;
 
-import ch.mzh.cc.command.Command;
-import ch.mzh.cc.command.CommandProcessor;
-import ch.mzh.cc.command.MoveEntityCommand;
-import ch.mzh.cc.command.SelectEntityCommand;
-import ch.mzh.cc.components.VehicleMovementComponent;
+import ch.mzh.cc.command.*;
 import ch.mzh.cc.model.Entity;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.math.Vector3;
+
+import static ch.mzh.cc.CommandMode.FIRE;
+import static ch.mzh.cc.CommandMode.MOVE;
 
 public class InputHandler extends InputAdapter {
 
@@ -22,33 +21,108 @@ public class InputHandler extends InputAdapter {
 
   // TODO: The handle methods probably should return void
 
+  private CommandMode forcedMode = null; // null = auto-detect
+  private CommandMode commandMode = MOVE;
+
   private final OrthographicCamera camera;
   private final Vector3 mouseWorldPos;
   private final CoordinateConverter coordinateConverter;
   private final CommandProcessor commandProcessor;
+  private final GameCore gameCore;
 
-  public InputHandler(OrthographicCamera camera, CoordinateConverter coordinateConverter, CommandProcessor commandProcessor) {
+  public InputHandler(OrthographicCamera camera, CoordinateConverter coordinateConverter, CommandProcessor commandProcessor, GameCore gameCore) {
     this.camera = camera;
     this.coordinateConverter = coordinateConverter;
     this.mouseWorldPos = new Vector3();
     this.commandProcessor = commandProcessor;
+    this.gameCore = gameCore;
   }
 
   @Override
   public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+    Position2D gridPositionFromScreen = getGridPositionFromScreen(screenX, screenY);
+
     if (button == Input.Buttons.LEFT) {
-      commandProcessor.queueCommand(new SelectEntityCommand(getGridPositionFromScreen(screenX, screenY)));
+      commandProcessor.queueCommand(new SelectEntityCommand(gridPositionFromScreen));
     } else if (button == Input.Buttons.RIGHT) {
-      commandProcessor.queueCommand(new MoveEntityCommand(getGridPositionFromScreen(screenX, screenY)));
+      CommandMode activeMode = determineActiveMode(gridPositionFromScreen);
+      Command command = switch (activeMode) {
+        case MOVE -> new MoveEntityCommand(gridPositionFromScreen);
+        case FIRE -> new FireCommand(gridPositionFromScreen);
+      };
+      commandProcessor.queueCommand(command);
     }
     commandProcessor.executeNextCommand();
     return true;
+  }
+
+  @Override
+  public boolean keyDown(int keycode) {
+    return switch (keycode) {
+      case Input.Keys.M -> {
+        setForcedMode(MOVE);
+        yield true;
+      }
+      case Input.Keys.F -> {
+        setForcedMode(FIRE);
+        yield true;
+      }
+      case Input.Keys.TAB -> {
+        toggleMode();
+        yield true;
+      }
+      case Input.Keys.ESCAPE -> {
+        setForcedMode(null); // Return to auto-detect
+        yield true;
+      }
+      default -> false;
+    };
+  }
+
+  public void setForcedMode(CommandMode mode) {
+    this.forcedMode = mode;
+    this.commandMode = mode != null ? mode : MOVE;
+  }
+
+  public CommandMode getCommandMode() {
+    return commandMode;
   }
 
   private Position2D getGridPositionFromScreen(int screenX, int screenY) {
     mouseWorldPos.set(screenX, screenY, 0);
     camera.unproject(mouseWorldPos);
     return coordinateConverter.worldToGrid(mouseWorldPos.x, mouseWorldPos.y);
+  }
+
+  private CommandMode determineActiveMode(Position2D position) {
+    if (forcedMode != null) return forcedMode;
+
+    // Auto-detect based on context. Query GameCore for context, but don't execute anything.
+    if (gameCore.noEntitySelected()) {
+      return MOVE; // Default when nothing selected
+    }
+
+    Entity selected = gameCore.getSelectedEntity();
+    Entity targetEntity = gameCore.getEntityManager().getEntityAt(position);
+
+    if (targetEntity != null && isEnemy(targetEntity, selected)) {
+      return FIRE;
+    }
+    return MOVE;
+  }
+
+  private boolean isEnemy(Entity target, Entity selected) {
+    // Depends on player ownership system. For now, assume different entity types are enemies.
+    // TODO: Implement enemy detection.
+    return target.getType() != selected.getType();
+  }
+
+  private void toggleMode() {
+    if (forcedMode == null) {
+      setForcedMode(FIRE); // Start with fire when toggling from auto
+    } else {
+      setForcedMode(forcedMode == MOVE ? FIRE : MOVE);
+    }
   }
 
 }

@@ -41,4 +41,8 @@ public class EntityManager {
     }
     return null;
   }
+
+  public void removeEntity(Entity entity) {
+    entities.remove(entity);
+  }
 }

@@ -15,7 +15,7 @@ public class MoveEntityCommand extends GameCommand {
   @Override
   public boolean canExecute(GameCore gameCore) {
 
-    if (!gameCore.isEntitySelected()) {
+    if (gameCore.noEntitySelected()) {
       failureReason = "No entity selected.";
       return false;
     }

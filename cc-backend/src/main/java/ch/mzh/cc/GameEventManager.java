@@ -35,6 +35,14 @@ public class GameEventManager {
     listeners.forEach(l -> l.onEntitySelected(entity));
   }
 
+  public void fireEntityDestroyed(Entity destroyedEntity) {
+    listeners.forEach(l -> l.onEntityDestroyed(destroyedEntity));
+  }
+
+  public void fireEntityFired(Entity shooter, Position2D targetPosition, boolean hit) {
+    // Notify listeners
+  }
+
   public void fireEntityDeselected() {
     listeners.forEach(l -> l.onEntityDeselected());
   }

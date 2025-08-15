@@ -22,7 +22,7 @@ public class GameRenderer {
     this.coordinateConverter = coordinateConverter;
   }
 
-  public void render(List<Entity> entities, Entity selectedEntity) {
+  public void render(List<Entity> entities, Entity selectedEntity, CommandMode commandMode) {
     shapeRenderer.setProjectionMatrix(camera.combined);
 
     renderGrid();
@@ -30,7 +30,10 @@ public class GameRenderer {
 
     if (selectedEntity != null) {
       renderSelectionIndicator(selectedEntity);
+      renderActionPreview(selectedEntity, commandMode); // Preview fuel- / fire-range
     }
+
+    renderModeIndicator(commandMode); // Show active mode
   }
 
   private void renderEntities(List<Entity> entities, Entity selectedEntity) {
@@ -170,4 +173,13 @@ public class GameRenderer {
     shapeRenderer.rect(worldPos.x, worldPos.y, tileSize, tileSize);
   }
 
+  private void renderModeIndicator(CommandMode mode) {
+    // Simple text rendering - you might want to use a proper font/UI library
+    // For now, just change the selection color or add a visual indicator
+  }
+
+  private void renderActionPreview(Entity selected, CommandMode mode) {
+    // Show movement range or fire range based on mode
+    // This is optional for first implementation
+  }
 }
