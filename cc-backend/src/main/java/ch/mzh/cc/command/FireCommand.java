@@ -5,6 +5,8 @@ import ch.mzh.cc.Position2D;
 import ch.mzh.cc.components.CannonComponent;
 import ch.mzh.cc.model.Entity;
 
+import java.util.Optional;
+
 import static ch.mzh.cc.Grid.calculateManhattanDistance;
 
 public class FireCommand extends GameCommand {
@@ -16,14 +18,13 @@ public class FireCommand extends GameCommand {
 
   @Override
   public boolean canExecute(GameCore gameCore) {
-    if (gameCore.noEntitySelected()) {
+    Entity selected = gameCore.getSelectedEntity();
+    if (selected == null) {
       failureReason = "No unit selected";
       return false;
     }
 
-    Entity selected = gameCore.getSelectedEntity();
     CannonComponent weapon = selected.getComponent(CannonComponent.class);
-
     if (weapon == null) {
       failureReason = selected.getName() + " cannot fire";
       return false;
