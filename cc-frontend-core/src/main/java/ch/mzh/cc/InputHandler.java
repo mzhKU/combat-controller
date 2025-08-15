@@ -41,12 +41,30 @@ public class InputHandler extends InputAdapter {
   }
 
   @Override
+  public boolean mouseMoved(int screenX, int screenY) {
+    // Convert screen coordinates to world coordinates
+    mouseWorldPos.set(screenX, screenY, 0);
+    camera.unproject(mouseWorldPos);
+
+    // Convert to grid position and update hover in renderer
+    Position2D gridPos = coordinateConverter.worldToGrid(mouseWorldPos.x, mouseWorldPos.y);
+
+    // Only update hover if within grid bounds
+    if (!gameCore.getGrid().isInvalidPosition(gridPos)) {
+      gameRenderer.setHoverPosition(gridPos);
+    } else {
+      gameRenderer.setHoverPosition(null);
+    }
+
+    return true;
+  }
+
+  @Override
   public boolean touchDown(int screenX, int screenY, int pointer, int button) {
     // Convert screen coordinates to world coordinates
     mouseWorldPos.set(screenX, screenY, 0);
     camera.unproject(mouseWorldPos);
 
-    // HERE NEW CODE - Check if end turn button was clicked
     if (gameRenderer.isEndTurnButtonClicked(mouseWorldPos.x, mouseWorldPos.y)) {
       int currentPlayer = gameCore.getGameState().getCurrentPlayerId();
       commandProcessor.queueCommand(new EndTurnCommand(currentPlayer));
