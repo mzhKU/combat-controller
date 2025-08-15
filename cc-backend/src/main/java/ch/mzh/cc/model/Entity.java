@@ -10,7 +10,7 @@ public class Entity {
     private String name;
     private EntityType type;
     private Position2D position;
-    private int playerId;
+    private int playerId = -1; // -1: neutral, 1: player1, 2: player2
 
     // private Vector2 worldPosition;
     private boolean active;
@@ -68,6 +68,15 @@ public class Entity {
     public boolean isActive() { return active; }
     public boolean isSelectable() { return selectable; }
     public int getPlayerId() { return this.playerId; }
+
+    public boolean isOwnedBy(int playerId) { return this.getPlayerId() == playerId; }
+    public boolean isSamePlayer(Entity other) {
+        return this.playerId != -1 && this.playerId == other.playerId;
+    }
+    public boolean isNeutral() { return playerId == -1; }
+    public boolean isEnemy(Entity other) {
+        return this.playerId != -1 && other.playerId != -1 && this.playerId != other.playerId;
+    }
 
     // Setters
     public void setName(String name) { this.name = name; }

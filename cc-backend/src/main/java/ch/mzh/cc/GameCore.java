@@ -8,6 +8,8 @@ import ch.mzh.cc.components.VehicleMovementComponent;
 import ch.mzh.cc.model.Entity;
 import ch.mzh.cc.play.GameState;
 
+import java.util.Optional;
+
 public class GameCore {
 
   private final Grid grid;
@@ -18,6 +20,7 @@ public class GameCore {
   private final EntityManager entityManager;
   private final GameState gameState;
 
+  private boolean isEntitySelected;
 
   private static final int GRID_WIDTH = 40;
   private static final int GRID_HEIGHT = 80;
@@ -60,16 +63,18 @@ public class GameCore {
   }
 
   public boolean selectEntity(Position2D position) {
-    Entity entity = entityManager.getEntityAt(position);
-
-    if (entity == null) {
-      selectedEntity = null;
-      return false;
-    }
-
-    selectedEntity = entity;
-    gameEventManager.fireEntitySelected(selectedEntity);
-    return true;
+    return entityManager.getEntityAt(position)
+            .map(entity -> {
+              selectedEntity = entity;
+              gameEventManager.fireEntitySelected(selectedEntity);
+              setEntitySelected(true);
+              return true;
+            })
+            .orElseGet(() -> {
+              selectedEntity = null;
+              setEntitySelected(false);
+              return false;
+            });
   }
 
   public boolean fireAtPosition(Entity shooter, Position2D targetPosition) {
@@ -78,18 +83,17 @@ public class GameCore {
     CannonComponent weapon = shooter.getComponent(CannonComponent.class);
     weapon.fire();
 
-    // Simple hit calculation - you can make this more sophisticated
-    Entity target = entityManager.getEntityAt(targetPosition);
-    boolean hit = target != null;
-
-    if (hit) {
-      HealthComponent health = target.getComponent(HealthComponent.class);
-      if (health != null && health.takeDamage(weapon.getDamage())) {
-        // Target destroyed
-        entityManager.removeEntity(target);
-        gameEventManager.fireEntityDestroyed(target);
-      }
-    }
+    boolean hit = entityManager.getEntityAt(targetPosition)
+            .map(target -> {
+              Optional.ofNullable(target.getComponent(HealthComponent.class))
+                      .filter(health -> health.takeDamage(weapon.getDamage()))
+                      .ifPresent(health -> {
+                        entityManager.removeEntity(target);
+                        gameEventManager.fireEntityDestroyed(target);
+                      });
+              return true;
+            })
+            .orElse(false);
 
     gameEventManager.fireEntityFired(shooter, targetPosition, hit);
     return true;
@@ -121,5 +125,13 @@ public class GameCore {
 
   public CommandProcessor getCommandProcessor() {
     return this.commandProcessor;
+  }
+
+  public boolean isEntitySelected() {
+    return this.isEntitySelected;
+  }
+
+  private void setEntitySelected(boolean selected) {
+    this.isEntitySelected = selected;
   }
 }

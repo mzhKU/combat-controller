@@ -1,6 +1,7 @@
 package ch.mzh.cc;
 
 import ch.mzh.cc.model.Entity;
+import ch.mzh.cc.play.GameState;
 
 public interface GameEventListener {
   default void onEntityMoved(Entity entity, Position2D oldPos, Position2D newPos) {}

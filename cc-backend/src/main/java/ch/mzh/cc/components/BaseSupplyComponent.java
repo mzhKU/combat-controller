@@ -10,6 +10,12 @@ public class BaseSupplyComponent extends SupplyComponent {
 
     @Override
     public boolean canRefuel(Entity supplier, Entity target) {
+
+        // Bases can refuel their own units or neutral bases can refuel anyone
+        if (!supplier.isNeutral() && !supplier.isSamePlayer(target)) {
+            return false;
+        }
+
         FuelComponent targetFuel = target.getComponent(FuelComponent.class);
 
         if (targetFuel.isFull()) {

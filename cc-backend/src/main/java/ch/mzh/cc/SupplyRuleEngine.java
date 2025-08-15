@@ -2,6 +2,7 @@ package ch.mzh.cc;
 
 import ch.mzh.cc.components.FuelSystem;
 import ch.mzh.cc.model.Entity;
+import ch.mzh.cc.play.GameState;
 import ch.mzh.cc.rules.CannonMovesNextToSupplyTruck;
 import ch.mzh.cc.rules.SupplyAction;
 import ch.mzh.cc.rules.SupplyRule;

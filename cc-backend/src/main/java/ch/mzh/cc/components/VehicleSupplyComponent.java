@@ -11,6 +11,12 @@ public class VehicleSupplyComponent extends SupplyComponent {
 
     @Override
     public boolean canRefuel(Entity supplier, Entity target) {
+
+        // Only refuel entities of the same player
+        if (!supplier.isSamePlayer(target)) {
+            return false;
+        }
+
         FuelComponent supply = supplier.getComponent(FuelComponent.class);
         FuelComponent targetFuel = target.getComponent(FuelComponent.class);
 

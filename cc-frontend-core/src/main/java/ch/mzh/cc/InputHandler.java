@@ -88,6 +88,10 @@ public class InputHandler extends InputAdapter {
     return commandMode;
   }
 
+  private boolean isEnemy(Entity target, Entity selected) {
+    return target.isEnemy(selected);
+  }
+
   private Position2D getGridPositionFromScreen(int screenX, int screenY) {
     mouseWorldPos.set(screenX, screenY, 0);
     camera.unproject(mouseWorldPos);
@@ -103,18 +107,10 @@ public class InputHandler extends InputAdapter {
     }
 
     Entity selected = gameCore.getSelectedEntity();
-    Entity targetEntity = gameCore.getEntityManager().getEntityAt(position);
-
-    if (targetEntity != null && isEnemy(targetEntity, selected)) {
-      return FIRE;
-    }
-    return MOVE;
-  }
-
-  private boolean isEnemy(Entity target, Entity selected) {
-    // Depends on player ownership system. For now, assume different entity types are enemies.
-    // TODO: Implement enemy detection.
-    return target.getType() != selected.getType();
+    return gameCore.getEntityManager().getEntityAt(position)
+            .filter(target -> isEnemy(target, selected))
+            .map(target -> FIRE)
+            .orElse(MOVE);
   }
 
   private void toggleMode() {

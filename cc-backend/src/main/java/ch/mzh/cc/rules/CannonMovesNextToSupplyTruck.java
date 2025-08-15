@@ -7,18 +7,17 @@ import ch.mzh.cc.model.EntityType;
 
 import java.util.Optional;
 
-import static ch.mzh.cc.Grid.calculateManhattanDistance;
-
-
 public class CannonMovesNextToSupplyTruck implements SupplyRule {
 
     @Override
     public Optional<SupplyAction> apply(EntityManager entityManager, Entity movedEntity, Position2D endPosition) {
-        Entity supplyTruck = entityManager.getEntity("Supply Truck 1");
-        // TODO: Protect against supply truck being null
-        if (calculateManhattanDistance(supplyTruck.getPosition(), endPosition) == 1 && movedEntity.getType() == EntityType.CANNON) {
-            return Optional.of(new SupplyAction(entityManager.getEntity("Supply Truck 1"), movedEntity));
+        if (movedEntity.getType() != EntityType.CANNON) {
+            return Optional.empty();
         }
-        return Optional.empty();
+
+        // Only find supply trucks owned by the same player
+        return entityManager.findEntityByTypeInRange(
+                        endPosition, 1, EntityType.SUPPLY_TRUCK, movedEntity.getPlayerId())
+                .map(supplyTruck -> new SupplyAction(supplyTruck, movedEntity));
     }
 }

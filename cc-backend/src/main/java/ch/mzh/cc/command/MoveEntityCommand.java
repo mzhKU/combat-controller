@@ -14,8 +14,7 @@ public class MoveEntityCommand extends GameCommand {
 
   @Override
   public boolean canExecute(GameCore gameCore) {
-
-    if (gameCore.noEntitySelected()) {
+    if (!gameCore.isEntitySelected()) {
       failureReason = "No entity selected.";
       return false;
     }
@@ -26,19 +25,25 @@ public class MoveEntityCommand extends GameCommand {
     }
 
     Entity selectedEntity = gameCore.getSelectedEntity();
-    Entity entity = gameCore.getEntityManager().getEntityAt(targetPosition);
 
-    if (entity != null && entity != selectedEntity) {
-      failureReason = "Position occupied by " + entity.getType() + " at (" + targetPosition.getX() + ", " + targetPosition.getY() + ")";
-      return false;
-    }
-
-    if (!selectedEntity.hasComponent(VehicleMovementComponent.class)) {
-      failureReason = "Selected entity cannot move: " + selectedEntity.getName();
-      return false;
-    }
-
-    return true;
+    // Check if position is occupied by another entity
+    return gameCore.getEntityManager().getEntityAt(targetPosition)
+            .filter(occupant -> occupant != selectedEntity)
+            .map(occupant -> {
+              if (occupant.isSamePlayer(selectedEntity)) {
+                failureReason = "Position occupied by friendly " + occupant.getType() + " at (" + targetPosition.getX() + ", " + targetPosition.getY() + ")";
+              } else {
+                failureReason = "Position occupied by enemy " + occupant.getType() + " at (" + targetPosition.getX() + ", " + targetPosition.getY() + ")";
+              }
+              return false;
+            })
+            .orElseGet(() -> {
+              if (!selectedEntity.hasComponent(VehicleMovementComponent.class)) {
+                failureReason = "Selected entity cannot move: " + selectedEntity.getName();
+                return false;
+              }
+              return true;
+            }); // Position is free or validation continues
   }
 
   @Override
