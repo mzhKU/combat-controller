@@ -1,6 +1,5 @@
 package ch.mzh.cc.components;
 
-
 import ch.mzh.cc.Position2D;
 import ch.mzh.cc.model.Entity;
 

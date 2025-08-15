@@ -1,5 +1,6 @@
 package ch.mzh.cc;
 
+import ch.mzh.cc.command.CommandProcessor;
 import ch.mzh.cc.components.BaseSupplyComponent;
 import ch.mzh.cc.components.Component;
 import ch.mzh.cc.components.FuelComponent;
@@ -27,6 +28,7 @@ public class Game extends ApplicationAdapter implements GameEventListener {
   private GameRenderer gameRenderer;
   private InputHandler inputHandler;
   private CoordinateConverter coordinateConverter;
+  private CommandProcessor commandProcessor;
 
   // Camera movement
   private static final float CAMERA_SPEED = 600f;
@@ -46,6 +48,7 @@ public class Game extends ApplicationAdapter implements GameEventListener {
 
     initializeCoordinateConverter();
     initializeGameRenderer();
+    initializeCommandProcessor();
     initializeInputHandler();
 
     // TODO: Create in backend
@@ -58,12 +61,11 @@ public class Game extends ApplicationAdapter implements GameEventListener {
   public void render() {
     float deltaTime = Gdx.graphics.getDeltaTime();
 
+    commandProcessor.executeAllCommands();
+
     calculateNewCameraPosition(deltaTime);
     camera.update();
-
-    // Clear screen
-    Gdx.gl.glClearColor(0.2f, 0.3f, 0.2f, 1);
-    Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+    clearScreen();
 
     gameRenderer.render(gameCore.getEntityManager().getEntities(), gameCore.getSelectedEntity());
   }
@@ -144,12 +146,21 @@ public class Game extends ApplicationAdapter implements GameEventListener {
   }
 
   private void initializeInputHandler() {
-    inputHandler = new InputHandler(camera, gameCore, coordinateConverter);
+    inputHandler = new InputHandler(camera, coordinateConverter, commandProcessor);
     Gdx.input.setInputProcessor(inputHandler);
   }
 
   private void initializeCoordinateConverter() {
     this.coordinateConverter = new CoordinateConverter(TILE_SIZE);
+  }
+
+  private void initializeCommandProcessor() {
+    this.commandProcessor = new CommandProcessor(gameCore);
+  }
+
+  private void clearScreen() {
+    Gdx.gl.glClearColor(0.2f, 0.3f, 0.2f, 1);
+    Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
   }
 
   private void createBase() {

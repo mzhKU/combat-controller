@@ -1,13 +1,15 @@
 package ch.mzh.cc;
 
+import ch.mzh.cc.command.CommandProcessor;
 import ch.mzh.cc.components.FuelSystem;
 import ch.mzh.cc.components.VehicleMovementComponent;
 import ch.mzh.cc.model.Entity;
 
 public class GameCore {
 
-  private Grid grid; // TODO: Initialize
+  private final Grid grid; // TODO: Initialize
   private Entity selectedEntity; // TODO: Could be in a "GameState"?
+  private final CommandProcessor commandProcessor;
 
   private final GameEventManager gameEventManager;
   private final EntityManager entityManager;
@@ -21,6 +23,7 @@ public class GameCore {
     this.gameEventManager = new GameEventManager();
     this.entityManager = new EntityManager();
     this.grid = new Grid(GRID_WIDTH, GRID_HEIGHT, TILE_SIZE);
+    this.commandProcessor = new CommandProcessor(this);
     FuelSystem fuelSystem = new FuelSystem();
     SupplyRuleEngine supplyRuleEngine = new SupplyRuleEngine(entityManager, fuelSystem);
 
@@ -38,7 +41,6 @@ public class GameCore {
     VehicleMovementComponent movement = entity.getComponent(VehicleMovementComponent.class);
     entityMoved = movement.move(entity, targetPosition);
 
-    // TODO: Should this be here or in frontend?
     if (entityMoved) {
       gameEventManager.fireEntityMovedSuccessful(entity, oldPosition, targetPosition);
     } else {
@@ -78,5 +80,9 @@ public class GameCore {
 
   public Grid getGrid() {
     return this.grid;
+  }
+
+  public CommandProcessor getCommandProcessor() {
+    return this.commandProcessor;
   }
 }

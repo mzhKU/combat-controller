@@ -1,5 +1,9 @@
 package ch.mzh.cc;
 
+import ch.mzh.cc.command.Command;
+import ch.mzh.cc.command.CommandProcessor;
+import ch.mzh.cc.command.MoveEntityCommand;
+import ch.mzh.cc.command.SelectEntityCommand;
 import ch.mzh.cc.components.VehicleMovementComponent;
 import ch.mzh.cc.model.Entity;
 import com.badlogic.gdx.Input;
@@ -9,81 +13,42 @@ import com.badlogic.gdx.math.Vector3;
 
 public class InputHandler extends InputAdapter {
 
+  /*
+  Responsibilities:
+  - InputHandler only handles input conversion to commands
+  - GameCore only handles game logic
+  - CommandProcessor handles command validation and execution
+  */
+
+  // TODO: The handle methods probably should return void
+
   private final OrthographicCamera camera;
-  private final GameCore gameCore;
   private final Vector3 mouseWorldPos;
   private final CoordinateConverter coordinateConverter;
+  private final CommandProcessor commandProcessor;
 
-  public InputHandler(OrthographicCamera camera, GameCore gameCore, CoordinateConverter coordinateConverter) {
+  public InputHandler(OrthographicCamera camera, CoordinateConverter coordinateConverter, CommandProcessor commandProcessor) {
     this.camera = camera;
-    this.gameCore = gameCore;
     this.coordinateConverter = coordinateConverter;
     this.mouseWorldPos = new Vector3();
+    this.commandProcessor = commandProcessor;
   }
 
   @Override
   public boolean touchDown(int screenX, int screenY, int pointer, int button) {
     if (button == Input.Buttons.LEFT) {
-      return handleEntitySelection(screenX, screenY);
+      commandProcessor.queueCommand(new SelectEntityCommand(getGridPositionFromScreen(screenX, screenY)));
     } else if (button == Input.Buttons.RIGHT) {
-      if (gameCore.isEntitySelected()) {
-        return handleMovementCommandOfSelectedEntity(screenX, screenY);
-      }
+      commandProcessor.queueCommand(new MoveEntityCommand(getGridPositionFromScreen(screenX, screenY)));
     }
-    return false;
+    commandProcessor.executeNextCommand();
+    return true;
   }
 
-  private boolean handleEntitySelection(int screenX, int screenY) {
-    convertScreenToWorldCoordinates(screenX, screenY); // TODO: Why this?
-
-    Position2D selectedGridPosition = coordinateConverter.worldToGrid(mouseWorldPos.x, mouseWorldPos.y);
-
-    if (gameCore.getGrid().isInvalidPosition(selectedGridPosition)) {
-      return false;
-    }
-
-    return gameCore.selectEntity(selectedGridPosition);
-  }
-
-  private boolean handleMovementCommandOfSelectedEntity(int screenX, int screenY) {
-    // TODO: Clean up unit selection and movement of unit
-    if (isImmobile(gameCore.getSelectedEntity())) return false;
-
-    convertScreenToWorldCoordinates(screenX, screenY); // TODO: why this?
-
-    Position2D targetPosition = coordinateConverter.worldToGrid(mouseWorldPos.x, mouseWorldPos.y);
-
-    if (gameCore.getGrid().isInvalidPosition(targetPosition)) {
-      // TODO: this should go into the FAILURE_REASON
-      System.out.println("Invalid target position: (" + targetPosition.getX() + ", " + targetPosition.getY() + ")");
-      return false;
-    }
-
-    Entity entityAtTarget = gameCore.getEntityManager().getEntityAt(targetPosition);
-    if (entityAtTarget != null && entityAtTarget != gameCore.getSelectedEntity()) {
-      // TODO: this should go into the FAILURE_REASON
-      System.out.println("Cannot move to occupied position: " + entityAtTarget.getType() + " at (" + targetPosition.getX() + ", " + targetPosition.getY() + ")");
-      return false;
-    }
-
-    // TODO: Should here be a return value
-    // TODO: Should frontend or backend react to the return value?
-    return gameCore.moveEntity(gameCore.getSelectedEntity(), targetPosition);
-  }
-
-  private void convertScreenToWorldCoordinates(int screenX, int screenY) {
+  private Position2D getGridPositionFromScreen(int screenX, int screenY) {
     mouseWorldPos.set(screenX, screenY, 0);
     camera.unproject(mouseWorldPos);
-  }
-
-  // TODO: Move to entity.
-  // TODO: Prevent NPE when right-click on empty grid with no entity selected
-  private boolean isImmobile(Entity selectedEntity) {
-    if (!selectedEntity.hasComponent(VehicleMovementComponent.class)) {
-      System.out.println("This entity cannot move: " + selectedEntity.getName());
-      return true;
-    }
-    return false;
+    return coordinateConverter.worldToGrid(mouseWorldPos.x, mouseWorldPos.y);
   }
 
 }

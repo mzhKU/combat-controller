@@ -31,6 +31,7 @@ public class EntityManager {
   }
 
   public Entity getEntityAt(Position2D position) {
+    // TODO: Return Optional<Enity>
     for (Entity entity : entities) {
       if (entity.isActive() && entity.isSelectable() &&
               entity.getPosition().getX() == position.getX() &&
