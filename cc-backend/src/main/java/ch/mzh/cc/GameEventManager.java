@@ -40,7 +40,7 @@ public class GameEventManager {
   }
 
   public void fireEntityFired(Entity shooter, Position2D targetPosition, boolean hit) {
-    // Notify listeners
+    listeners.forEach(l -> l.onEntityFired(shooter, targetPosition, hit));
   }
 
   public void fireTurnEnded(int playerId) {

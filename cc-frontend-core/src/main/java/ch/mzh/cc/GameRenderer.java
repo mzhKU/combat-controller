@@ -1,7 +1,10 @@
 package ch.mzh.cc;
 
+import ch.mzh.cc.animation.AnimationManager;
+import ch.mzh.cc.animation.ShotAnimation;
 import ch.mzh.cc.model.Entity;
 import ch.mzh.cc.model.TerrainType;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Vector2;
@@ -20,6 +23,7 @@ public class GameRenderer {
   private final ShapeRenderer shapeRenderer;
   private final SpriteBatch spriteBatch;
   private final BitmapFont font;
+  private final AnimationManager animationManager;
 
   private final OrthographicCamera camera;
   private final GameCore gameCore;
@@ -40,6 +44,7 @@ public class GameRenderer {
     this.shapeRenderer = new ShapeRenderer();
     this.spriteBatch = new SpriteBatch();
     this.font = new BitmapFont();
+    this.animationManager = new AnimationManager();
     this.font.getData().setScale(1.5f);
 
     this.camera = camera;
@@ -62,6 +67,7 @@ public class GameRenderer {
     }
 
     renderEntities(entities, selectedEntity);
+    renderAnimations();
 
     if (selectedEntity != null) {
       renderSelectionIndicator(selectedEntity);
@@ -78,6 +84,115 @@ public class GameRenderer {
 
     return worldX >= buttonX && worldX <= buttonX + BUTTON_WIDTH &&
             worldY >= buttonY && worldY <= buttonY + BUTTON_HEIGHT;
+  }
+
+  public void addShotAnimation(Position2D startPos, Position2D targetPos) {
+    float distance = Math.abs(targetPos.getX() - startPos.getX()) +
+            Math.abs(targetPos.getY() - startPos.getY());
+    float duration = Math.max(1.0f, distance * 0.1f); // Longer shots take more time
+
+    ShotAnimation animation = new ShotAnimation(startPos, targetPos, duration);
+    animationManager.addShotAnimation(animation);
+  }
+
+  public void updateAnimations(float deltaTime) {
+    animationManager.update(deltaTime);
+  }
+
+  private void renderAnimations() {
+    List<ShotAnimation> animations = animationManager.getActiveAnimations();
+    if (animations.isEmpty()) return;
+
+    int tileSize = gameCore.getGrid().getTileSize();
+
+    shapeRenderer.begin(Filled);
+
+    for (ShotAnimation animation : animations) {
+      // Render muzzle flash
+      if (animation.showMuzzleFlash()) {
+        renderMuzzleFlash(animation, tileSize);
+      }
+
+      // Render projectile
+      if (animation.showProjectile()) {
+        renderProjectile(animation, tileSize);
+      }
+
+      // Render explosion
+      if (animation.showExplosion()) {
+        renderExplosion(animation, tileSize);
+      }
+    }
+
+    shapeRenderer.end();
+  }
+
+  private void renderMuzzleFlash(ShotAnimation animation, int tileSize) {
+    Vector2 startWorldPos = coordinateConverter.gridToWorld(animation.getStartPosition());
+    float alpha = animation.getMuzzleFlashAlpha();
+
+    // Yellow-white muzzle flash
+    shapeRenderer.setColor(1.0f, 1.0f, 0.8f, alpha);
+    float flashSize = tileSize * 0.4f;
+    shapeRenderer.circle(
+            startWorldPos.x + tileSize / 2f,
+            startWorldPos.y + tileSize / 2f,
+            flashSize
+    );
+
+    // Inner bright core
+    shapeRenderer.setColor(1.0f, 1.0f, 1.0f, alpha);
+    shapeRenderer.circle(
+            startWorldPos.x + tileSize / 2f,
+            startWorldPos.y + tileSize / 2f,
+            flashSize * 0.5f
+    );
+  }
+
+  private void renderProjectile(ShotAnimation animation, int tileSize) {
+    float projectileX = animation.getProjectileWorldX(tileSize);
+    float projectileY = animation.getProjectileWorldY(tileSize);
+
+    // Projectile trail (fading)
+    shapeRenderer.setColor(1.0f, 0.8f, 0.4f, 0.6f);
+    shapeRenderer.circle(projectileX, projectileY, animation.getProjectileSize() + 1);
+
+    // Projectile core
+    Color color = animation.getProjectileColor();
+    shapeRenderer.setColor(color.r, color.g, color.b, color.a);
+    shapeRenderer.circle(projectileX, projectileY, animation.getProjectileSize());
+  }
+
+  private void renderExplosion(ShotAnimation animation, int tileSize) {
+    Vector2 targetWorldPos = coordinateConverter.gridToWorld(animation.getTargetPosition());
+    float radius = animation.getExplosionRadius(tileSize);
+    float alpha = animation.getExplosionAlpha();
+
+    if (radius <= 0) return;
+
+    // Outer explosion (orange-red)
+    shapeRenderer.setColor(1.0f, 0.4f, 0.0f, alpha * 0.8f);
+    shapeRenderer.circle(
+            targetWorldPos.x + tileSize / 2f,
+            targetWorldPos.y + tileSize / 2f,
+            radius
+    );
+
+    // Inner explosion (yellow-white)
+    shapeRenderer.setColor(1.0f, 1.0f, 0.6f, alpha);
+    shapeRenderer.circle(
+            targetWorldPos.x + tileSize / 2f,
+            targetWorldPos.y + tileSize / 2f,
+            radius * 0.6f
+    );
+
+    // Core (bright white)
+    shapeRenderer.setColor(1.0f, 1.0f, 1.0f, alpha);
+    shapeRenderer.circle(
+            targetWorldPos.x + tileSize / 2f,
+            targetWorldPos.y + tileSize / 2f,
+            radius * 0.3f
+    );
   }
 
   private void renderFireRange(Entity selectedEntity) {

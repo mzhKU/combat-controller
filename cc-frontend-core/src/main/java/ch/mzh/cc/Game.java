@@ -80,6 +80,8 @@ public class Game extends ApplicationAdapter implements GameEventListener {
 
     commandProcessor.executeAllCommands();
 
+    gameRenderer.updateAnimations(deltaTime);
+
     calculateNewCameraPosition(deltaTime);
     camera.update();
     clearScreen();
@@ -127,6 +129,11 @@ public class Game extends ApplicationAdapter implements GameEventListener {
     System.out.println("Player " + playerId + " ended their turn");
     System.out.println("Now it's Player " + gameCore.getGameState().getCurrentPlayerId() + "'s turn");
 
+  }
+
+  @Override
+  public void onEntityFired(Entity shooter, Position2D targetPosition, boolean hit) {
+    gameRenderer.addShotAnimation(shooter.getPosition(), targetPosition);
   }
 
   private void calculateNewCameraPosition(float deltaTime) {
