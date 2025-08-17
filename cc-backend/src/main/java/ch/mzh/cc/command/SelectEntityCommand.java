@@ -26,7 +26,7 @@ public class SelectEntityCommand extends GameCommand {
     }
 
     // Check if entity belongs to current player
-    if (!gameCore.getGameState().canSelectEntity(entityAtPosition)) {
+    if (gameCore.getGameSystem().isEnemyUnit(entityAtPosition)) {
       failureReason = "Cannot select opponent's unit";
       return false;
     }

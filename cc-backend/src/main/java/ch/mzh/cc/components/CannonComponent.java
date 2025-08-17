@@ -12,8 +12,8 @@ public class CannonComponent implements Component {
     this.magazine = magazine;
   }
 
-  public boolean canFire() {
-    return magazine > 0;
+  public boolean isEmpty() {
+    return magazine <= 0;
   }
 
   public void fire() {

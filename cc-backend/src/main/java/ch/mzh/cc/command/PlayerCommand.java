@@ -11,7 +11,7 @@ public abstract class PlayerCommand extends GameCommand {
 
   @Override
   public boolean canExecute(GameCore gameCore) {
-    return gameCore.getGameState().canTakeAction(playerId) && canExecuteForPlayer(gameCore);
+    return gameCore.getGameSystem().canTakeAction(playerId) && canExecuteForPlayer(gameCore);
   }
 
   protected abstract boolean canExecuteForPlayer(GameCore gameCore);

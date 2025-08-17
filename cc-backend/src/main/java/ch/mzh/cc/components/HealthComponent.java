@@ -7,7 +7,7 @@ public class HealthComponent implements Component {
     this.health = health;
   }
 
-  public boolean takeDamage(int damage) {
+  public boolean destroyedIfHealthBelowZero(int damage) {
     health -= damage;
     return health <= 0; // returns true if destroyed
   }

@@ -19,8 +19,6 @@ public class InputHandler extends InputAdapter {
   - CommandProcessor handles command validation and execution
   */
 
-  // TODO: The handle methods probably should return void
-
   private CommandMode forcedMode = null; // null = auto-detect
   private CommandMode commandMode = MOVE;
 
@@ -61,12 +59,16 @@ public class InputHandler extends InputAdapter {
 
   @Override
   public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+    if (gameCore.getGameSystem().isGameOver()) {
+      return true; // Ignore input during game over
+    }
+
     // Convert screen coordinates to world coordinates
     mouseWorldPos.set(screenX, screenY, 0);
     camera.unproject(mouseWorldPos);
 
     if (gameRenderer.isEndTurnButtonClicked(mouseWorldPos.x, mouseWorldPos.y)) {
-      int currentPlayer = gameCore.getGameState().getCurrentPlayerId();
+      int currentPlayer = gameCore.getGameSystem().getCurrentPlayerId();
       commandProcessor.queueCommand(new EndTurnCommand(currentPlayer));
       commandProcessor.executeNextCommand();
       return true;
@@ -90,6 +92,10 @@ public class InputHandler extends InputAdapter {
 
   @Override
   public boolean keyDown(int keycode) {
+    if (gameCore.getGameSystem().isGameOver()) {
+      return true; // Ignore other input during game over
+    }
+
     return switch (keycode) {
       case Input.Keys.M -> {
         setForcedMode(MOVE);

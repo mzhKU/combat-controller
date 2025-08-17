@@ -35,7 +35,7 @@ public class GameEventManager {
     listeners.forEach(l -> l.onEntitySelected(entity));
   }
 
-  public void fireEntityDestroyed(Entity destroyedEntity) {
+  public void fireEntityDestroyed(int shooterId, Entity destroyedEntity) {
     listeners.forEach(l -> l.onEntityDestroyed(destroyedEntity));
   }
 
@@ -55,4 +55,7 @@ public class GameEventManager {
     listeners.forEach(l -> l.onFuelConsumed(entity, amount));
   }
 
+  public void fireGameOver(int winnerId) {
+    listeners.forEach(l -> l.onGameOver(winnerId));
+  }
 }

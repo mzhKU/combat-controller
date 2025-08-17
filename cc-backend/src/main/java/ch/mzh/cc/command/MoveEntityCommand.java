@@ -21,7 +21,7 @@ public class MoveEntityCommand extends GameCommand {
 
     Entity selectedEntity = gameCore.getSelectedEntity();
 
-    if (!gameCore.getGameState().canSelectEntity(selectedEntity)) {
+    if (gameCore.getGameSystem().isEnemyUnit(selectedEntity)) {
       failureReason = "Cannot move opponent's unit";
       return false;
     }

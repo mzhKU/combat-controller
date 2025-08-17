@@ -32,8 +32,9 @@ public class Game extends ApplicationAdapter implements GameEventListener {
   private static final float MAX_ZOOM = 3.0f;
 
   // TODO: Use same value here and in GameCore
-  private static final int TILE_SIZE = 10; // 10px tiles
+  private static final int TILE_SIZE = 15; // 10px tiles
 
+  private static final int CANNON_DAMAGE = 100;
 
   private static final int   BASE_PLAYER_1_INIT_X = 10;
   private static final int   BASE_PLAYER_1_INIT_Y = 10;
@@ -54,7 +55,7 @@ public class Game extends ApplicationAdapter implements GameEventListener {
     initializeCamera();
     initializeGameCore();
 
-    gameCore.getGameState().initializeRandomStartingPlayer();
+    gameCore.getGameSystem().initializeRandomStartingPlayer();
 
     initializeCoordinateConverter();
     initializeGameRenderer();
@@ -78,7 +79,9 @@ public class Game extends ApplicationAdapter implements GameEventListener {
   public void render() {
     float deltaTime = Gdx.graphics.getDeltaTime();
 
-    commandProcessor.executeAllCommands();
+    if (!gameCore.getGameSystem().isGameOver()) {
+      commandProcessor.executeAllCommands();
+    }
 
     gameRenderer.updateAnimations(deltaTime);
 
@@ -91,6 +94,10 @@ public class Game extends ApplicationAdapter implements GameEventListener {
             gameCore.getSelectedEntity(),
             inputHandler.getCommandMode()
     );
+
+    if (gameCore.getGameSystem().isGameOver()) {
+      gameRenderer.renderGameOverOverlay();
+    }
   }
 
   @Override
@@ -120,20 +127,24 @@ public class Game extends ApplicationAdapter implements GameEventListener {
 
   @Override
   public void onEntityDestroyed(Entity destroyedEntity) {
-    // Animations, update counters, check for WIN / LOSE conditions...
     System.out.println("Destroyed entity: " + destroyedEntity.getName());
   }
 
   @Override
   public void onTurnEnded(int playerId) {
     System.out.println("Player " + playerId + " ended their turn");
-    System.out.println("Now it's Player " + gameCore.getGameState().getCurrentPlayerId() + "'s turn");
+    System.out.println("Now it's Player " + gameCore.getGameSystem().getCurrentPlayerId() + "'s turn");
 
   }
 
   @Override
   public void onEntityFired(Entity shooter, Position2D targetPosition, boolean hit) {
     gameRenderer.addShotAnimation(shooter.getPosition(), targetPosition);
+  }
+
+  @Override
+  public void onGameOver(int winnerId) {
+    System.out.println("Winner is player: " + winnerId);
   }
 
   private void calculateNewCameraPosition(float deltaTime) {
@@ -259,7 +270,7 @@ public class Game extends ApplicationAdapter implements GameEventListener {
   private void createCannon(String entityName, int playerId, int x, int y) {
     Component cannonMovement = new VehicleMovementComponent();
     Component cannonFuel = new FuelComponent(50, 2);
-    Component weapon = new CannonComponent(10, 10, 20);
+    Component weapon = new CannonComponent(10, CANNON_DAMAGE, 20);
     Component healthComponent = new HealthComponent(50);
     Entity cannon = new Cannon(entityName, EntityType.CANNON, new Position2D(x, y), playerId);
     cannon.addComponent(cannonMovement);

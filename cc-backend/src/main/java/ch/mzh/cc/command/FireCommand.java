@@ -5,8 +5,6 @@ import ch.mzh.cc.Position2D;
 import ch.mzh.cc.components.CannonComponent;
 import ch.mzh.cc.model.Entity;
 
-import java.util.Optional;
-
 import static ch.mzh.cc.Grid.calculateManhattanDistance;
 
 public class FireCommand extends GameCommand {
@@ -24,7 +22,7 @@ public class FireCommand extends GameCommand {
       return false;
     }
 
-    if (!gameCore.getGameState().canSelectEntity(selected)) {
+    if (gameCore.getGameSystem().isEnemyUnit(selected)) {
       failureReason = "Cannot fire with opponent's unit";
       return false;
     }
@@ -35,7 +33,7 @@ public class FireCommand extends GameCommand {
       return false;
     }
 
-    if (!weapon.canFire()) {
+    if (weapon.isEmpty()) {
       failureReason = selected.getName() + " is out of ammunition";
       return false;
     }

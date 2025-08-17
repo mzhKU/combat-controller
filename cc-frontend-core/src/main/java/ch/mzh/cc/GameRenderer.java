@@ -468,7 +468,7 @@ public class GameRenderer {
   }
 
   private void renderPlayerIndicator(CommandMode commandMode) {
-    int currentPlayer = gameCore.getGameState().getCurrentPlayerId();
+    int currentPlayer = gameCore.getGameSystem().getCurrentPlayerId();
 
     // Position at top-left of screen
     float x = camera.position.x - camera.viewportWidth * camera.zoom / 2 + BUTTON_MARGIN;
@@ -546,6 +546,40 @@ public class GameRenderer {
     shapeRenderer.setColor(1.0f, 1.0f, 1.0f, 1.0f);
     shapeRenderer.rect(x, y, BUTTON_WIDTH, BUTTON_HEIGHT);
     shapeRenderer.end();
+  }
+
+  public void renderGameOverOverlay() {
+    int winnerId = gameCore.getGameSystem().getWinnerId();
+
+    // Semi-transparent overlay
+    shapeRenderer.begin(Filled);
+    shapeRenderer.setColor(0.0f, 0.0f, 0.0f, 0.7f);
+    shapeRenderer.rect(
+            camera.position.x - camera.viewportWidth * camera.zoom / 2,
+            camera.position.y - camera.viewportHeight * camera.zoom / 2,
+            camera.viewportWidth * camera.zoom,
+            camera.viewportHeight * camera.zoom
+    );
+    shapeRenderer.end();
+
+    // Winner text
+    spriteBatch.setProjectionMatrix(camera.combined);
+    spriteBatch.begin();
+
+    String winnerText = "Player " + winnerId + " Wins!";
+    String restartText = "Press R to restart";
+
+    float textX = camera.position.x - 60; // Center roughly
+    float textY = camera.position.y + 20;
+
+    font.getData().setScale(2.0f); // Larger text
+    font.setColor(1.0f, 1.0f, 1.0f, 1.0f); // White text
+    font.draw(spriteBatch, winnerText, textX, textY);
+
+    font.getData().setScale(1.0f); // Smaller text
+    font.draw(spriteBatch, restartText, textX - 20, textY - 40);
+
+    spriteBatch.end();
   }
 
   public void dispose() {

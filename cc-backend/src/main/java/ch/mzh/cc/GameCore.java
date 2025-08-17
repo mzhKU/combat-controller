@@ -6,9 +6,7 @@ import ch.mzh.cc.components.FuelSystem;
 import ch.mzh.cc.components.HealthComponent;
 import ch.mzh.cc.components.VehicleMovementComponent;
 import ch.mzh.cc.model.Entity;
-import ch.mzh.cc.play.GameState;
-
-import java.util.Optional;
+import ch.mzh.cc.play.GameSystem;
 
 public class GameCore {
 
@@ -18,15 +16,15 @@ public class GameCore {
 
   private final GameEventManager gameEventManager;
   private final EntityManager entityManager;
-  private final GameState gameState;
+  private final GameSystem gameSystem;
 
   private boolean isEntitySelected;
 
-  private static final int GRID_WIDTH = 40;
-  private static final int GRID_HEIGHT = 80;
+  private static final int GRID_WIDTH = 30;
+  private static final int GRID_HEIGHT = 60;
 
   // TODO: Use same value here and in Game
-  private static final int TILE_SIZE = 10; // 10px tiles
+  private static final int TILE_SIZE = 15; // 10px tiles
 
   private static final String FAILURE_REASON = "DEFAULT_REASON";
 
@@ -35,13 +33,13 @@ public class GameCore {
     this.entityManager = new EntityManager();
     this.grid = new Grid(GRID_WIDTH, GRID_HEIGHT, TILE_SIZE);
     this.commandProcessor = new CommandProcessor(this);
-    this.gameState = new GameState();
+    this.gameSystem = new GameSystem();
 
     FuelSystem fuelSystem = new FuelSystem();
-    SupplyRuleEngine supplyRuleEngine = new SupplyRuleEngine(entityManager, fuelSystem);
+    GameRuleEngine gameRuleEngine = new GameRuleEngine(entityManager, fuelSystem, gameSystem, gameEventManager);
 
     // Backend systems listen to events
-    gameEventManager.addListener(supplyRuleEngine);
+    gameEventManager.addListener(gameRuleEngine);
     gameEventManager.addListener(fuelSystem);
   }
 
@@ -83,17 +81,18 @@ public class GameCore {
     CannonComponent weapon = shooter.getComponent(CannonComponent.class);
     weapon.fire();
 
-    boolean hit = entityManager.getEntityAt(targetPosition)
-            .map(target -> {
-              Optional.ofNullable(target.getComponent(HealthComponent.class))
-                      .filter(health -> health.takeDamage(weapon.getDamage()))
-                      .ifPresent(health -> {
-                        entityManager.removeEntity(target);
-                        gameEventManager.fireEntityDestroyed(target);
-                      });
-              return true;
-            })
-            .orElse(false);
+    boolean hit = false;
+    Entity target = entityManager.getEntityAt(targetPosition).orElse(null);
+
+    if (target != null) {
+      hit = true;
+
+      HealthComponent health = target.getComponent(HealthComponent.class);
+      if (health != null && health.destroyedIfHealthBelowZero(weapon.getDamage())) {
+        entityManager.removeEntity(target);
+        gameEventManager.fireEntityDestroyed(shooter.getPlayerId(), target);
+      }
+    }
 
     gameEventManager.fireEntityFired(shooter, targetPosition, hit);
     return true;
@@ -103,29 +102,23 @@ public class GameCore {
     return selectedEntity == null;
   }
 
-  public Entity getSelectedEntity() {
-    return this.selectedEntity;
-  }
 
   public GameEventManager getGameEventManager() {
     return this.gameEventManager;
   }
-
   public EntityManager getEntityManager() {
     return this.entityManager;
   }
-
+  public GameSystem getGameSystem() {
+    return this.gameSystem;
+  }
+  public Entity getSelectedEntity() {
+    return this.selectedEntity;
+  }
   public Grid getGrid() {
     return this.grid;
   }
 
-  public GameState getGameState() {
-    return this.gameState;
-  }
-
-  public CommandProcessor getCommandProcessor() {
-    return this.commandProcessor;
-  }
 
   public boolean isEntitySelected() {
     return this.isEntitySelected;
@@ -134,4 +127,5 @@ public class GameCore {
   private void setEntitySelected(boolean selected) {
     this.isEntitySelected = selected;
   }
+
 }

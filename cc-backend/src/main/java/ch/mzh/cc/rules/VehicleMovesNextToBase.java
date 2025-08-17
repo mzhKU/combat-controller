@@ -4,12 +4,9 @@ import ch.mzh.cc.EntityManager;
 import ch.mzh.cc.Position2D;
 import ch.mzh.cc.model.Entity;
 import ch.mzh.cc.model.EntityType;
-import ch.mzh.cc.play.GameState;
 
 import java.util.Optional;
 import java.util.Set;
-
-import static ch.mzh.cc.Grid.calculateManhattanDistance;
 
 public class VehicleMovesNextToBase implements SupplyRule {
     private static final Set<EntityType> REFUELABLE_TYPES = Set.of(EntityType.CANNON, EntityType.SUPPLY_TRUCK);

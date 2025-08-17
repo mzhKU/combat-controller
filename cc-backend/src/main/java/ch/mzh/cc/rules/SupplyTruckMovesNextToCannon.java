@@ -4,11 +4,8 @@ import ch.mzh.cc.EntityManager;
 import ch.mzh.cc.Position2D;
 import ch.mzh.cc.model.Entity;
 import ch.mzh.cc.model.EntityType;
-import ch.mzh.cc.play.GameState;
 
 import java.util.Optional;
-
-import static ch.mzh.cc.Grid.calculateManhattanDistance;
 
 
 public class SupplyTruckMovesNextToCannon implements SupplyRule {

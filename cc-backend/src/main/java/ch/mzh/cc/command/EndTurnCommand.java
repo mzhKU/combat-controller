@@ -15,7 +15,7 @@ public class EndTurnCommand extends PlayerCommand {
 
   @Override
   public boolean execute(GameCore gameCore) {
-    gameCore.getGameState().endTurn();
+    gameCore.getGameSystem().endTurn();
     gameCore.getGameEventManager().fireTurnEnded(playerId);
     return true;
   }
