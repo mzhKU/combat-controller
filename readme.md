@@ -5,6 +5,7 @@ Tech dept:
 - Integration tests
 - Run the game without graphics
 
+![Fire Mode](combat-controller-making-of/Screenshot%202025-09-09%20215335.png "FireMode")
 
 
 Refuel use cases:
